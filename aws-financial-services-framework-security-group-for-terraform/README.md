@@ -1,57 +1,96 @@
-# terraform-aws-fsf-manual-spoke-vpc
+# aws-financial-services-framework-security-group-for-terraform
 
-Amazon Virtual Private Cloud (Amazon VPC) lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define. You have complete control over your virtual networking environment, including selection of your own IP address range, creation of subnets, and configuration of route tables and network gateways. You can use both IPv4 and IPv6 in your VPC for secure and easy access to resources and applications.
-You can easily customize the network configuration of your Amazon VPC. For example, you can create a public-facing subnet for your web servers that have access to the internet. You can also place your backend systems, such as databases or application servers, in a private-facing subnet with no internet access. You can use multiple layers of security, including security groups and network access control lists, to help control access to Amazon EC2 instances in each subnet.
+A security group acts as a virtual firewall for your instance to control inbound and outbound traffic. When you launch an instance in a VPC, you can assign up to five security groups to the instance. Security groups act at the instance level, not the subnet level. Therefore, each instance in a subnet in your VPC can be assigned to a different set of security groups.
 
-This module provisions an Amazon VPC (only). This module allows users to enable:
- *  IPv6
- * VPC Flow Logs
- * DNS & DHCP Support
- * Change the tenancy type of the VPC
+If you launch an instance using the Amazon EC2 API or a command line tool, and you don't specify a security group, the instance is automatically assigned to the default security group for the VPC. If you launch an instance using the Amazon EC2 console, you have an option to create a new security group for the instance.
+
+For each security group, you add rules that control the inbound traffic to instances, and a separate set of rules that control the outbound traffic. This section describes the basic things that you need to know about security groups for your VPC and their rules.
+
+This terraform module creates two categories of security groups; routable/externally routable & non-routable/aws-specific security groups. 
+
+Within the Routable/Externally Routable security group category are the following security groups:
  
-The enablement of the Amazon VPC FlowLogs is dependent on the VPC FlowLogs Terraform module. 
-To enable VPC FlowLogs you must ensure the variable "enable_vpc_flow_logs" is set to true.  
+* Database Security Group 
+* Web Security Group
+* Apache Kafka Security Group
+* Elastic Search Security Group
+* Apache Spark Security Group
 
+The Non-Routable/AWS Routable security allows access to all ports as long as the source and destination is the VPC CIDR ranges.
 
-Please see the below declarations of the VPC FlowLog dependency in both the main.tf and variables.tf file
+## Routable/Externally Routable Security Group 
 
-variables.tf
+The definition of Routable/Externally Routable in the context of this module means that this security group allows access to the ports listed above for the o-premises CIDR ranges specified in the below variable in the variable.tf file
+'var.on_premises_cidrs' is an array that contains a set of on-premises CIDR ranges that you specify. Infrastructure with this security group attached to their elastic network interface will allow be allowed to receive traffic generated from these on-premises CIDR ranges or VPC CIDR rang(s). 
+
+This security group can work in chorus with the externally routable subnets created by the terraform-aws-fsf-subnet module and the externally routable route table created by the terraform-aws-fsf-route-table module for optimal isolation around external traffic. 
+
 ```hcl-terraform
-variable "enable_vpc_flow_logs" {
-  description = "Whether vpc flow log should be enabled for this vpc."
-  type    = bool
-  default = true
+variable "on_premises_cidrs" {
+  description = "On-premises or non VPC network range"
+  type    = list(string)
+  default = [ "172.16.0.0/16", "172.17.0.0/16", "172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.22.0.0/16" ]
 }
 ```
-main.tf
-```hcl-terraform
-module "fsf-vpc-flow-logs" {
-  source  = "app.terraform.io/aws-gfs-accelerate/fsf-vpc-flow-logs/aws"
-  version = "0.0.1"
-  vpc_id  = aws_vpc.spoke_vpc.id
-  enabled = var.enable_vpc_flow_logs
-}
 
+To deploy a specific type of security group with this category simply change the bool of the required security group to true in the variable "security_grp_traffic_pattern {}". 
+
+Please see below example. 
+
+```hcl-terraform
+variable "security_grp_traffic_pattern" {
+  type = map(bool)
+  default = {
+    database                = true
+    web                     = true
+    kafka_zookeeper         = true
+    elasticsearch           = true
+    apache_spark            = true
+
+  }
+}
 ```
-To create a VPC formed from the opinions in this module, please use the below example as a guide.
+
+## Non-Routable/AWS Routable Security Group 
+Non-routable security groups allows access to all ports for traffic with a source and destination of subnets that belongs to the VPC CIDR range(s).
+Unlike the externally routable or Routaable security groups, this security group is created by default.
+
+
 ## Example usage
+Please see the below deployment example for building routable and mnon routable security groups using this terraform module. 
 
 ```hcl-terraform
+
 provider "aws" {
-  profile   = "default"
-  region    = "us-east-2"
+	profile   = "default"
+	region    = "us-east-2"
 }
 
-module "fsf-manual-spoke-vpc"{
-  source                          = "app.terraform.io/aws-gfs-accelerate/fsf-manual-spoke-vpc/aws"
-  version                         = "0.0.1"
-  vpc_cidr_block                  = var.vpc_cidr_block
-  dns_support                     = var.dns_support
-  instance_tenancy                = var.instance_tenancy
-  dns_host_names                  = var.dns_host_names
-  enable_aws_ipv6_cidr_block      = var.enable_aws_ipv6_cidr_block
-  enable_vpc_flow_logs            = var.monitoring.vpc_flow_log
+variable "security_grp_traffic_pattern" {
+  type = map(bool)
+  default = {
+    database                = true
+    web                     = true
+    kafka_zookeeper         = true
+    elasticsearch           = true
+    apache_spark            = true
+
+  }
 }
+
+
+# Create VPC Security Group Modules 
+# ---------------------------------------------------------------------------------------------------------------
+module "fsf-security-groups" {
+  source                          = "app.terraform.io/aws-gfs-accelerate/fsf-security-groups/aws"
+  version                         = "0.0.2"
+  vpc_id                          = module.fsf-manual-spoke-vpc.vpc_id
+  vpc_cidr_block                  = module.fsf-manual-spoke-vpc.vpc_cidr_block
+  environment_type                = var.environment_type
+  on_premises_cidrs               = var.on_premises_cidrs
+  security_grp_traffic_pattern    = var.security_grp_traffic_pattern
+}
+
 ```
 
 # Overview
@@ -87,12 +126,7 @@ The Terraform modules in the AWS FSF project are preconfigured with defaults and
 
 # Security
 
-Amazon VPC provides advanced security features, such as security groups and network access control lists, to enable inbound and outbound filtering at the instance and subnet level. In addition, you can store data in Amazon S3 and restrict access so that it’s only accessible from instances inside your VPC. For additional security, you can create dedicated instances that are physically isolated from other AWS accounts, at the hardware level.
-
-This terraform module creates a logically isolated space in the AWS Cloud. No access paths or infrastructure exist in this space until defined by the implementation of other modules. This opinionated VPC for Financial Services customers is not built with a virtual gateway (VGW) or Internet (IGW).  
-```hcl-terraform
-resource "aws_vpc" "spoke_vpc" {}
-```
+Amazon VPC Security Groups enforce the security boundary atv the EC2 instance level. The security groups created by this module goes a step further by creating security group rules that restrict traffic to specific IP ranges for on-premises adn AWS specific networks. 
 
 # Cost
 

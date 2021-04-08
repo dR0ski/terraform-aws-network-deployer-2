@@ -1,57 +1,85 @@
-# terraform-aws-fsf-manual-spoke-vpc
+# terraform-aws-fsf-vpc-subnets
 
-Amazon Virtual Private Cloud (Amazon VPC) lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define. You have complete control over your virtual networking environment, including selection of your own IP address range, creation of subnets, and configuration of route tables and network gateways. You can use both IPv4 and IPv6 in your VPC for secure and easy access to resources and applications.
-You can easily customize the network configuration of your Amazon VPC. For example, you can create a public-facing subnet for your web servers that have access to the internet. You can also place your backend systems, such as databases or application servers, in a private-facing subnet with no internet access. You can use multiple layers of security, including security groups and network access control lists, to help control access to Amazon EC2 instances in each subnet.
-
-This module provisions an Amazon VPC (only). This module allows users to enable:
- *  IPv6
- * VPC Flow Logs
- * DNS & DHCP Support
- * Change the tenancy type of the VPC
+Amazon Virtual Private Cloud (Amazon VPC) supports IPv4 & IPv6 CIDR ranges. While IPv6 CIDR ranges are optional, IPv4 CIDR ranges are mandatory. Amazon VPCs supports from the largest, a /16 to the smallest, /28.
  
-The enablement of the Amazon VPC FlowLogs is dependent on the VPC FlowLogs Terraform module. 
-To enable VPC FlowLogs you must ensure the variable "enable_vpc_flow_logs" is set to true.  
+
+ This terraform module creates three categories of IPv4 subnets: 
+ * AWS Routable
+ * Externally Routable
+ * Transit Gateway specific subnets
+ 
+## AWS Routable Subnets 
+
+An AWS Routable subnet is only routable within the AWS Cloud. The AWS Route Table to which  this subnet is attached has only a local route. The Security group that was created for this subnet only allow routing among the subnets inside the VPC. This subnet can be created from the primary VPC CIDR or secondary CIDR range(s).
 
 
-Please see the below declarations of the VPC FlowLog dependency in both the main.tf and variables.tf file
+## Externally Routable Subnets 
 
-variables.tf
+An Externally Routable subnet is routable inside the AWS Cloud and on-premises. However, it is not routable on the public INternet. The AWS Route Table to which these subnets are attached has two types of routes; local routes and transit gateway routes. There are no AWS Internet Gateway(s) (IGW) created in the spoke VPC and as such no default route to an IGW in the route table. 
+
+
+## Transit Gateway Specific Subnet
+
+A transit gateway (tgw) specific subnet is created for AWS Transit Gateway attachment interfaces as prescribed by the AWS best practices guideline for AWS and as such should be stated as the subnet of choice during the transit gateway attachmnet creation request. A tgw spefific interface i created in each availability zone in the AWS Regions. 
+
+## Creating Subnets
+In the variables.tf file is a variable map labled subnet_type. This map has the three subnets specified as listed below. Simply flip the bool from false to true in oder to create the subnet type of yoiur choice. It is recommended that all three be created and by default all three type is equal to a bool of true. 
+
 ```hcl-terraform
-variable "enable_vpc_flow_logs" {
-  description = "Whether vpc flow log should be enabled for this vpc."
-  type    = bool
-  default = true
+variable "subnet_type" {
+  type = map(bool)
+  default = {
+    aws_routable                      = true
+    externally_routable               = true
+    transit_gateway_subnet            = true
+  }
 }
 ```
-main.tf
-```hcl-terraform
-module "fsf-vpc-flow-logs" {
-  source  = "app.terraform.io/aws-gfs-accelerate/fsf-vpc-flow-logs/aws"
-  version = "0.0.1"
-  vpc_id  = aws_vpc.spoke_vpc.id
-  enabled = var.enable_vpc_flow_logs
-}
 
-```
 To create a VPC formed from the opinions in this module, please use the below example as a guide.
 ## Example usage
 
+variables.tf
+```hcl-terraform
+variable "vpc_id" {}
+variable "map_public_ip_on_launch" {} //false by default and should never be true.
+variable "assign_ipv6_address_on_creation" {} //false by default. No other bool is accepted as denoted by the variables condition. 
+variable "environment_type" {}
+
+variable "private_subnets" {
+  default = []
+}
+
+variable "public_subnets" {
+  default = []
+}
+
+variable "transit_gateway_subnets" {
+  default = []
+}
+
+```
+main.tf
 ```hcl-terraform
 provider "aws" {
   profile   = "default"
   region    = "us-east-2"
 }
 
-module "fsf-manual-spoke-vpc"{
-  source                          = "app.terraform.io/aws-gfs-accelerate/fsf-manual-spoke-vpc/aws"
-  version                         = "0.0.1"
-  vpc_cidr_block                  = var.vpc_cidr_block
-  dns_support                     = var.dns_support
-  instance_tenancy                = var.instance_tenancy
-  dns_host_names                  = var.dns_host_names
-  enable_aws_ipv6_cidr_block      = var.enable_aws_ipv6_cidr_block
-  enable_vpc_flow_logs            = var.monitoring.vpc_flow_log
+
+module "fsf-vpc-subnets" {
+  source                          = "app.terraform.io/aws-gfs-accelerate/fsf-vpc-subnets/aws"
+  version                         = "0.0.  3"
+  vpc_id                          = module.fsf-manual-spoke-vpc.vpc_id
+  map_public_ip_on_launch         = var.map_public_ip_on_launch
+  assign_ipv6_address_on_creation = var.assign_ipv6_address_on_creation
+  subnet_type                     = var.subnet_type
+  private_subnets                 = var.private_subnets
+  public_subnets                  = var.public_subnets
+  transit_gateway_subnets         = var.transit_gateway_subnets
+  environment_type                = var.environment_type
 }
+
 ```
 
 # Overview
@@ -86,13 +114,10 @@ The Terraform modules in the AWS FSF project are preconfigured with defaults and
 * No ability to modify bucket policy
 
 # Security
-
-Amazon VPC provides advanced security features, such as security groups and network access control lists, to enable inbound and outbound filtering at the instance and subnet level. In addition, you can store data in Amazon S3 and restrict access so that it’s only accessible from instances inside your VPC. For additional security, you can create dedicated instances that are physically isolated from other AWS accounts, at the hardware level.
+The subnets created in this module are managed by purpose built security groups and route tables. These enforce the boundaries specified in this document.
 
 This terraform module creates a logically isolated space in the AWS Cloud. No access paths or infrastructure exist in this space until defined by the implementation of other modules. This opinionated VPC for Financial Services customers is not built with a virtual gateway (VGW) or Internet (IGW).  
-```hcl-terraform
-resource "aws_vpc" "spoke_vpc" {}
-```
+
 
 # Cost
 

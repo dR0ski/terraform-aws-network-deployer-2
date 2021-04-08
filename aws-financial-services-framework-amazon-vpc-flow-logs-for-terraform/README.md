@@ -1,56 +1,44 @@
-# terraform-aws-fsf-manual-spoke-vpc
+# terraform-aws-fsf-vpc-flow-logs
 
-Amazon Virtual Private Cloud (Amazon VPC) lets you provision a logically isolated section of the AWS Cloud where you can launch AWS resources in a virtual network that you define. You have complete control over your virtual networking environment, including selection of your own IP address range, creation of subnets, and configuration of route tables and network gateways. You can use both IPv4 and IPv6 in your VPC for secure and easy access to resources and applications.
-You can easily customize the network configuration of your Amazon VPC. For example, you can create a public-facing subnet for your web servers that have access to the internet. You can also place your backend systems, such as databases or application servers, in a private-facing subnet with no internet access. You can use multiple layers of security, including security groups and network access control lists, to help control access to Amazon EC2 instances in each subnet.
+Amazon Virtual Private Cloud (VPC) Flow Logs is a feature that enables you to capture information about the IP traffic going to and from network interfaces in your VPC. Flow log data can be published to Amazon CloudWatch Logs or Amazon S3. After you've created a flow log, you can retrieve and view its data in the chosen destination.
+Flow logs can help you with a number of tasks, such as:
 
-This module provisions an Amazon VPC (only). This module allows users to enable:
- *  IPv6
- * VPC Flow Logs
- * DNS & DHCP Support
- * Change the tenancy type of the VPC
- 
-The enablement of the Amazon VPC FlowLogs is dependent on the VPC FlowLogs Terraform module. 
-To enable VPC FlowLogs you must ensure the variable "enable_vpc_flow_logs" is set to true.  
+* Diagnosing overly restrictive security group rules
+* Monitoring the traffic that is reaching your instance
+* Determining the direction of the traffic to and from the network interfaces
+* This module provisions an Amazon VPC (only). This module allows users to enable:
 
+This terraform module creates an Amazon VPC Flow Logs implementation that stores all log data in AWS Cloud Logs. Amazon S3 as a destination for log data will be released in version two of this module.  
 
-Please see the below declarations of the VPC FlowLog dependency in both the main.tf and variables.tf file
+The enablement of the Amazon VPC FlowLogs is dependent on the "var.enabled". If "var.enabled=true" then the VPC FlowLogs Terraform module will build all the components for a fully-function VPC Flow Logs that is configured to capture ALL traffic type. 
 
-variables.tf
+This variable can be seen below:
+
 ```hcl-terraform
-variable "enable_vpc_flow_logs" {
-  description = "Whether vpc flow log should be enabled for this vpc."
-  type    = bool
-  default = true
+variable "enabled" {
+	type  = bool
+	validation {
+		condition     = var.enabled == true
+		error_message = "The enabled value must be set to true."
+	}
 }
 ```
-main.tf
-```hcl-terraform
-module "fsf-vpc-flow-logs" {
-  source  = "app.terraform.io/aws-gfs-accelerate/fsf-vpc-flow-logs/aws"
-  version = "0.0.1"
-  vpc_id  = aws_vpc.spoke_vpc.id
-  enabled = var.enable_vpc_flow_logs
-}
+To deploy this terraform module or incorpoorate it in another module, please see the below configuration.  
 
-```
-To create a VPC formed from the opinions in this module, please use the below example as a guide.
 ## Example usage
-
 ```hcl-terraform
+
 provider "aws" {
-  profile   = "default"
-  region    = "us-east-2"
+	profile   = "default"
+	region    = "us-east-2"
 }
 
-module "fsf-manual-spoke-vpc"{
-  source                          = "app.terraform.io/aws-gfs-accelerate/fsf-manual-spoke-vpc/aws"
-  version                         = "0.0.1"
-  vpc_cidr_block                  = var.vpc_cidr_block
-  dns_support                     = var.dns_support
-  instance_tenancy                = var.instance_tenancy
-  dns_host_names                  = var.dns_host_names
-  enable_aws_ipv6_cidr_block      = var.enable_aws_ipv6_cidr_block
-  enable_vpc_flow_logs            = var.monitoring.vpc_flow_log
+
+module "fsf-vpc-flow-logs" {
+	source  = "app.terraform.io/aws-gfs-accelerate/fsf-vpc-flow-logs/aws"
+	version = "0.0.1"
+	vpc_id  = aws_vpc.spoke_vpc.id
+	enabled = var.enable_vpc_flow_logs
 }
 ```
 
@@ -87,11 +75,39 @@ The Terraform modules in the AWS FSF project are preconfigured with defaults and
 
 # Security
 
-Amazon VPC provides advanced security features, such as security groups and network access control lists, to enable inbound and outbound filtering at the instance and subnet level. In addition, you can store data in Amazon S3 and restrict access so that it’s only accessible from instances inside your VPC. For additional security, you can create dedicated instances that are physically isolated from other AWS accounts, at the hardware level.
+Security in this module is enforced through IAM policies. These policies only allow a trimmed set of Actions and only within the AWS account in which the VPC lives.  
 
-This terraform module creates a logically isolated space in the AWS Cloud. No access paths or infrastructure exist in this space until defined by the implementation of other modules. This opinionated VPC for Financial Services customers is not built with a virtual gateway (VGW) or Internet (IGW).  
+	
 ```hcl-terraform
-resource "aws_vpc" "spoke_vpc" {}
+
+resource "aws_iam_role_policy" "cwlogpolicy" {
+	name  = "loggingpolicy"
+	count = var.enabled == true ? 1 : 0
+	role  = aws_iam_role.vpc_flowlog_cloudwatch_role[count.index].name
+	policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": [
+				"logs:CreateLogGroup",
+				"logs:CreateLogStream",
+				"logs:PutLogEvents",
+				"logs:DescribeLogGroups",
+				"logs:DescribeLogStreams"
+			],
+			"Effect": "Allow",
+			"Resource": [
+					"arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:*:log-stream:*",
+					"arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:*"
+
+					]
+		}
+	]
+}
+EOF
+}
+
 ```
 
 # Cost

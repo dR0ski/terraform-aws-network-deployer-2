@@ -1,0 +1,40 @@
+version: 0.2
+
+  env:
+    shell: bash
+
+  phases:
+    install:
+      runtime-versions:
+        nodejs: 12
+        java: corretto11
+        python: 3.x
+        golang: 1.14
+      commands:
+        - echo "Install `date` in `pwd`"
+        - apt-get update
+        - apt-get install tree
+        - pip install terraform-compliance
+        - mkdir -p ~/bin
+        - cd ~/bin
+        - export PATH="$PATH:/root/bin"
+        - wget https://releases.hashicorp.com/terraform/0.12.26/terraform_0.12.26_linux_amd64.zip
+        - apt-get install unzip -y
+        - unzip terraform_0.12.26_linux_amd64.zip
+        - install -d ~/.terraform.d/plugins
+        - export PATH="$PATH:/root/bin"
+        - cd
+        # - We will revisit this when we start using terraform cloud as our backend. (added by Androski)
+        # - cd ~/.terraform.d/plugins && curl -s --fail -LO https://github.com/apparentlymart/terraform-credentials-env/releases/download/v1.0.0/terraform-credentials-env_1.0.0_linux_amd64.zip && unzip terraform-credentials-env_1.0.0_linux_amd64.zip
+        # - echo 'credentials_helper "env" {}' > ~/.terraformrc
+        - echo "Installation Completed `date` in `pwd`"
+    pre_build:
+      commands:
+        - echo "Starting pre_build `date` in `pwd`"
+    build:
+      commands:
+        - echo "Starting build `date` in `pwd`"
+        - make generate-plan
+        - make run-static-tests
+        - make run-unit-tests
+        - echo "Build completed `date`"
