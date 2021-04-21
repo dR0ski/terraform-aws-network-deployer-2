@@ -59,6 +59,15 @@ locals {
 module "fsf-shared-services-vpc-network-operations-lambda-fn" {
   source  = "../aws-financial-services-network-ops-lambda-fn"
   vpc_type =  var.vpc_env_type
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 
@@ -68,12 +77,15 @@ module "fsf-shared-services-vpc-network-operations-lambda-fn" {
 module "fsf-shared-services-network-put-event-lambda-fn" {
   source  = "../aws-financial-services-network-ops-put-event-lambda-fn"
   depends_on = [module.fsf-shared-services-vpc-network-operations-lambda-fn]
-  vpc_id                              = module.fsf-shared-services-vpc.vpc_id # data.terraform_remote_state.shared_services_network.outputs.shared_services_vpc_id
-  private_hosted_zone_id              = "" # module.fsf-spoke-dns-private-hosted-zones.private-hosted-zone-id
-  vpc_region                          = var.aws_region
-  eventbus_arn                        = module.fsf-shared-services-vpc-network-operations-eventbus.eventbus_arn # data.terraform_remote_state.shared_services_network.outputs.shared_services_networkops_eventbus_arn
-  vpc_type                            = var.vpc_env_type
-  route53_acts                        = var.route53_acts
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 
@@ -87,6 +99,15 @@ module "fsf-shared-services-vpc-network-operations-eventbus" {
   network-ops-lambda-fn-name = module.fsf-shared-services-vpc-network-operations-lambda-fn.network-ops-lambda-fn-name
   network-ops-lambda-fn-arn = module.fsf-shared-services-vpc-network-operations-lambda-fn.network-ops-lambda-fn-arn
   network-ops-lambda-fn-id = module.fsf-shared-services-vpc-network-operations-lambda-fn.network-ops-lambda-fn-id
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 
@@ -168,7 +189,8 @@ module "fsf-shared-services-create-vpc-route-tables" {
 # AWS Transit Gateway | This module submits a TGW association request then automatically configure TGW route tables
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-shared-services-vpc-transit-gateway-association" {
-  source                                            = "../aws-financial-services-framework-transit-gateway-association-spoke"
+  source                                            = "../aws-financial-services-framework-transit-gateway-association-n-route-configuration"
+  count = var.transit_gateway_association_instructions.create_transit_gateway_association==true  ? 1:0
   vpc_id                                            = module.fsf-shared-services-vpc.vpc_id
   environment_type                                  = var.Environment_Type
   transit_gateway_id                                = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_id, "transit gateway ID not found")        #paris_transit_gateway_id
@@ -191,6 +213,7 @@ module "fsf-shared-services-vpc-transit-gateway-association" {
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-shared-services-vpc-add-route" {
   source                          = "../aws-financial-services-framework-add-routes"
+  count = (var.transit_gateway_association_instructions.create_transit_gateway_association == true ? 1:0)
   aws_route_table_id              = module.fsf-shared-services-create-vpc-route-tables.aws_routable_routing_table_id
   external_route_table_id         = module.fsf-shared-services-create-vpc-route-tables.externally_routable_routing_table_id
   tgw_aws_route_destination       = var.tgw_aws_route_destination
@@ -233,10 +256,19 @@ module "fsf-shared-services-vpc-security-groups" {
 # ---------------------------------------------------------------------------------------------------------------
 # AWS Route 53 | Creates Resolver Endpoints && Private Hosted Zone(s)
 # ---------------------------------------------------------------------------------------------------------------
-module "fsf-shared-services-vpc-dns" {
+module "fsf-shared-services-vpc-dns-resolvers" {
   source  = "../aws-financial-services-framework-dns-resolvers"
   external_security_id                = module.fsf-shared-services-vpc-security-groups.non_routable_security_group_id
   externally_routable_subnet_id       = module.fsf-shared-services-vpc-subnets.routable_subnets
   vpc_id                              = module.fsf-shared-services-vpc.vpc_id
   resolver_query_logging_destination  = ""
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }

@@ -10,6 +10,21 @@
 # ---------------------------------------------------------------------------------------------------------------
 data "aws_organizations_organization" "my_aws_organization" {}
 
+# Object that contains a list of key value pairs that forms the tags added to a VPC on creation
+# ---------------------------------------------------------------------------------------------------------------
+locals {
+  default_tags = {
+    Name                 = var.Application_Name
+    Application_ID       = var.Application_ID
+    Application_Name     = var.Application_Name
+    Business_Unit        = var.Business_Unit
+    CostCenterCode       = var.CostCenterCode
+    CreatedBy            = var.CreatedBy
+    Manager              = var.Manager
+    Environment_Type     = var.Environment_Type
+  }
+}
+
 
 data "archive_file" "zip"{
   type = "zip"
@@ -114,6 +129,7 @@ resource "aws_lambda_function" "route53_association_lambda" {
   runtime = "python3.8"
   timeout = 900
   memory_size = 512
+  tags = local.default_tags
 }
 
 # ----------------------------------------------------------------------------------------------------------

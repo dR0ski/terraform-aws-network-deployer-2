@@ -2,16 +2,16 @@
 ##################################################### VARIABLES ######################################################
 # ---------------------------------------------------------------------------------------------------------------
 
-variable "vpc_id"{}
+//variable "vpc_id"{}
 
 variable "vpc_type"{default="spoke"}
 
-variable "vpc_region"{}
+//variable "vpc_region"{}
+//
+//variable "eventbus_arn"{}
+//
 
-variable "eventbus_arn"{}
-
-
-variable "private_hosted_zone_id"{}
+# variable "private_hosted_zone_id"{}
 
 
 variable "external_security_id"{

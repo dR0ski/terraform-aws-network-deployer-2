@@ -4,40 +4,10 @@
 
 variable "vpc_id"{}
 
-variable "vpc_region"{}
-
-variable "eventbus_arn"{default=""}
-
-variable "resolver_query_logging_destination"{default=""}
-
-variable "shared_services_vpc_id"{default=""}
-
-variable "vpc_type"{default="spoke"}
 
 variable "private_hosted_zone_name"{
  type = list(string)
   default =  ["anaconda.aws-fsf-corp.com"]
-}
-
-variable "external_security_id"{
-  default = "a"
-}
-
-variable "externally_routable_subnet_id"{
-  type = list(string)
-  default = ["a","b"]
-}
-
-variable "route53_association_lambda_fn_name" {default = "X"}
-
-variable "rule_type" {
-  type    = string
-  description = "The AWS Route 53 resolver rule type can either be FORWARD|SYSTEM|RECURSIVE."
-  validation {
-    # The condition here identifies if the variable contains one of the AWS Regions specified. This list can be reduced.
-    condition = can(regex("FORWARD|SYSTEM|RECURSIVE", var.rule_type))
-    error_message = "Please enter a valid AWS Route 53 resolver rule type."
-  }
 }
 
 variable "route53_acts" {
@@ -52,11 +22,6 @@ variable "route53_acts" {
     share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
   }
 }
-
-variable "attach_to_centralize_dns_solution"{
-  default=true
-}
-
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -106,5 +71,9 @@ variable "Manager" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
   default = "KenJackson"
+}
+
+variable "api_x_key" {
+  default = "eInSTeInXtHe0rY7rEltiv!ty"
 }
 

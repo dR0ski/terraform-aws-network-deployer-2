@@ -1,3 +1,146 @@
+# ---------------------------------------------------------------------------------------------------------------
+# SOLUTION BUILD CONTROL | BOOLEAN MAP THAT CONTROLS THE TYPE OF VPC TO DEPLOY
+# ---------------------------------------------------------------------------------------------------------------
+# Add true besides the solution you would like to deploy.
+#   1. Adding true for shared_services_vpc to deploy a shared services VPC
+#   2. Adding true for spoke_vpc deploys a spoke VPC
+#   3. Adding true for pave_networking_components_for_spoke_n_shared_services_integration to deploy
+#      the eventbus and lambda functions that makes it possible for spoke VPCs to associate with
+#      centralized resources inside the shared services VPC or security services VPC.
+# ---------------------------------------------------------------------------------------------------------------
+
+######### MUST BE CONFIGURED ##############
+variable "which_vpc_type_are_you_creating" {
+  type = map(bool)
+  default = {
+    shared_services_vpc = false    # Specify true or false
+    spoke_vpc           = false    # Specify true or false
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+#  Terraform Backend Configuration for AWS Transit Gateway  |
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_backend_s3_bucket_aws_region"{
+  default = "us-east-2"
+  # Please fill in the aws S3 region where the bucket is being hosted
+}
+
+variable "tf_backend_s3_bucket_name"{
+  default = "abc-s3-bucket"
+  # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
+}
+
+
+variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "abc-transit-gateway-s3-prefix-n-key"
+  # The S3 key or prefix+key for the terraform state file
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Shared Services State Persistence Configuration |
+# ---------------------------------------------------------------------------------------------------------------
+# This Terraform Backend is configured for Amazon S3 by default; however, you can replace this default config
+# and replace it with yours.
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_shared_services_backend_s3_bucket_aws_region"{
+  default = "us-east-2"
+  # Please fill in the aws S3 region where the bucket is being hosted
+}
+
+variable "tf_shared_services_backend_s3_bucket_name"{
+  default = "abc-s3-bucket"
+  # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
+}
+
+variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "abc-shared-services-prefix-n-key"
+  # The S3 key or prefix+key for the terraform state file
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Transit Gateway Association Task Map
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "transit_gateway_association_instructions" {
+  type = map(bool)
+  default = {
+    create_transit_gateway_association                        = false   # true //Associates VPC with AWS Transit Gateway
+    access_shared_services_vpc                                = false   # true //Propagates VPC routes to Shared Services Route Table
+    perform_east_west_packet_inspection                       = false   # Specify true or false
+    allow_onprem_access_to_entire_vpc_cidr_range              = false   # Specify true or false
+    allow_onprem_access_to_externally_routable_vpc_cidr_range = false   # Specify true or false
+
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# AWS VPC SECURITY GROUP | Decision Map | Adding true creates the security that you want
+# ---------------------------------------------------------------------------------------------------------------
+#   ####### Only enable the security that is needed
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "security_grp_traffic_pattern" {
+  type = map(bool)
+  default = {
+    database                = true  # Specify true or false
+    web                     = true  # Specify true or false
+    kafka_zookeeper         = false # Specify true or false
+    elasticsearch           = false # Specify true or false
+    apache_spark            = false # Specify true or false
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# VPC ENDPOINTS
+# ---------------------------------------------------------------------------------------------------------------
+# VPC Endpoint Boolean Map
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "endpoints" {
+  type = map(bool)
+  default = {
+    s3_gateway          = true  # Specify true or false
+    dynamodb            = true  # Specify true or false
+    secrets_manager     = false # Specify true or false
+    kms                 = false # Specify true or false
+    ec2                 = false # Specify true or false
+    ec2_messages        = false # Specify true or false
+    ecs                 = false # Specify true or false
+    ecs_agent           = false # Specify true or false
+    ecs_telemetry       = false # Specify true or false
+    sts                 = false # Specify true or false
+    sns                 = false # Specify true or false
+    sqs                 = false # Specify true or false
+    ssm                 = false # Specify true or false
+    ssm_messages        = false # Specify true or false
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Route 53 Private Hosted Zone |
+# Controls whether a private hosted zone is created or not. It also controls the creation of route 53 resolver rules.
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "route53_acts" {
+  type = map(bool)
+  default = {
+    create_standalone_private_hosted_zone                                       = true  # Specify true or false
+    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
+    associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
+    associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
+    create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
+    create_forwarding_rule_for_domain                                           = false # Specify true or false
+    share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# AWS REGION | REGION CODE MAPPED TO REGION NAME
+# ---------------------------------------------------------------------------------------------------------------
 variable "aws_region"{
   type = map(string)
   default = {
@@ -9,65 +152,36 @@ variable "aws_region"{
     ireland           = "eu-west-1"
     london            = "eu-west-2"
     paris             = "eu-west-3"
-
+    south_africa      = "af-south-1"
+    hong_kong         = "ap-east-1"
+    mumbai            = "ap-south-1"
+    osaka_local       = "ap-northeast-3"
+    seoul             = "ap-northeast-2"
+    singapore         = "ap-southeast-1"
+    sydney            = "ap-southeast-2"
+    tokyo             = "ap-northeast-1"
+    frankfurt         = "eu-central-1"
+    milan             = "eu-south-1"
+    paris             = "eu-west-3"
+    stockholm         = "eu-north-1"
+    middle_east       = "me-south-1"
+    sao_paulo         = "sa-east-1"
   }
 }
 
 variable "vpc_env_type"{default="spoke"}
 
-variable "route53_acts" {
-  type = map(bool)
-  default = {
-    create_forwarding_rule_for_sub_domain       = false
-    create_forwarding_rule_for_domain           = true
-    share_forwarding_rule_with_aws_organization = true
+
+variable "rule_type" {
+  type    = string
+  description = "The AWS Route 53 resolver rule type can either be FORWARD|SYSTEM|RECURSIVE."
+  default = "FORWARD"
+  validation {
+    # The condition here identifies if the variable contains one of the AWS Regions specified. This list can be reduced.
+    condition = can(regex("FORWARD|SYSTEM|RECURSIVE", var.rule_type))
+    error_message = "Please enter a valid AWS Route 53 resolver rule type."
   }
 }
-
-
-variable "attach_to_centralize_dns_solution"{
-  default=true
-}
-
-
-######### MUST BE CONFIGURED ##############
-# ---------------------------------------------------------------------------------------------------------------
-#  Terraform Backend Configuration for AWS Transit Gateway  |
-# ---------------------------------------------------------------------------------------------------------------
-
-variable "tf_backend_s3_bucket_aws_region"{
-  default = "" # Please fill in the aws S3 region where the bucket is being hosted
-}
-
-variable "tf_backend_s3_bucket_name"{
-  default = "" # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
-}
-
-
-variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "" # The S3 key or prefix+key for the terraform state file
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
-# Shared Services State Persistence Configuration |
-# ---------------------------------------------------------------------------------------------------------------
-# This Terraform Backend is configured for Amazon S3 by default; however, you can replace this default config
-# and replace it with yours.
-# ---------------------------------------------------------------------------------------------------------------
-
-variable "tf_shared_services_backend_s3_bucket_aws_region"{
-  default = "" # Please fill in the aws S3 region where the bucket is being hosted
-}
-
-variable "tf_shared_services_backend_s3_bucket_name"{
-  default = "" # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
-}
-
-variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "" # The S3 key or prefix+key for the terraform state file
-}
-
 
 # ---------------------------------------------------------------------------------------------------------------
 #  Controls Resource Deployment for VPC TYPES
@@ -78,8 +192,8 @@ variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
 variable "vpc_type" {
   type = map(bool)
   default = {
-    spoke_vpc               = true
-    shared_services         = false
+    spoke_vpc               = true  # Specify true or false
+    shared_services         = false # Specify true or false
   }
 }
 
@@ -99,25 +213,14 @@ variable "vpc_type_string" {
 variable "is_centralize_interface_endpoints_available" {
   type = map(bool)
   default = {
-    is_centralized_interface_endpoints          = false
-    associate_with_private_hosted_zones         = false
+    is_centralized_interface_endpoints          = false # Specify true or false
+    associate_with_private_hosted_zones         = false # Specify true or false
   }
 }
 
 
-
-variable "aws_region_names" {
-  type = map(string)
-  default = {
-    us-east-1     = "n_virginia"
-    us-east-2     = "ohio"
-    us-west-1     = "n_california"
-    us-west-2     = "oregon"
-    ca-central-1  = "canada_montreal"
-    eu-west-1     = "ireland"
-    eu-west-2     = "london"
-    eu-west-3     = "paris"
-  }
+variable "attach_to_centralize_dns_solution"{
+  default= false # Specify true or false
 }
 
 
@@ -206,8 +309,8 @@ variable "enable_vpc_flow_logs" {
 variable "create_dhcp_options" {
   type = map(bool)
   default = {
-    dhcp_options          = true
-    custom_dhcp_options   = false
+    dhcp_options          = true  # Specify true or false
+    custom_dhcp_options   = false # Specify true or false
   }
 }
 
@@ -241,26 +344,6 @@ variable "netbios_node_type" {
 
 
 # ---------------------------------------------------------------------------------------------------------------
-################################### TRANSIT GATEWAY ASSOCIATION VARIBLES ########################################
-# ---------------------------------------------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------------------------------------------
-# Transit Gateway Association Task Map
-# ---------------------------------------------------------------------------------------------------------------
-variable "transit_gateway_association_instructions" {
-  type = map(bool)
-  default = {
-    create_transit_gateway_association                        = true //Associates VPC with AWS Transit Gateway
-    access_shared_services_vpc                                = true //Propagates VPC routes to Shared Services Route Table
-    perform_east_west_packet_inspection                       = false
-    allow_onprem_access_to_entire_vpc_cidr_range              = false
-    allow_onprem_access_to_externally_routable_vpc_cidr_range = false
-
-  }
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
 ########################################### SUBNET MODULE VARIABLES #############################################
 # ---------------------------------------------------------------------------------------------------------------
 
@@ -272,9 +355,9 @@ variable "transit_gateway_association_instructions" {
 variable "subnet_type" {
   type = map(bool)
   default = {
-    aws_routable                      = true
-    externally_routable               = true
-    transit_gateway_subnet            = true
+    aws_routable                      = true # Specify true or false
+    externally_routable               = true # Specify true or false
+    transit_gateway_subnet            = true # Specify true or false
   }
 }
 
@@ -325,9 +408,9 @@ variable "transit_gateway_subnets" {
 variable "route_table" {
   type = map(bool)
   default = {
-    aws_routable_table          = true
-    tgw_table                   = false
-    external_table              = true
+    aws_routable_table          = true  # Specify true or false
+    tgw_table                   = false # Specify true or false
+    external_table              = true  # Specify true or false
   }
 }
 
@@ -363,34 +446,6 @@ variable "tgw_route_destination"{
 
 }
 
-
-# ---------------------------------------------------------------------------------------------------------------
-# VPC ENDPOINTS
-# ---------------------------------------------------------------------------------------------------------------
-
-# VPC Endpoint Object List
-# ---------------------------------------------------------------------------------------------------------------
-variable "endpoints" {
-  type = map(bool)
-  default = {
-    s3_gateway          = true
-    dynamodb            = true
-    secrets_manager     = true
-    kms                 = true
-    ec2                 = true
-    ec2_messages        = true
-    ecs                 = true
-    ecs_agent           = true
-    ecs_telemetry       = true
-    sts                 = true
-    sns                 = true
-    sqs                 = true
-    ssm                 = true
-    ssm_messages        = true
-  }
-}
-
-
 # Decision to create AWS Route 53 Private Hosted Zones
 # ---------------------------------------------------------------------------------------------------------------
 variable "create_private_hosted_zones_for_endpoints" {
@@ -409,7 +464,7 @@ variable "create_private_hosted_zones_for_endpoints" {
 variable "enable_private_dns" {
   description = "A boolean flag to enable/disable DNS support in the VPC. Defaults true."
   type    = bool
-  default = true
+  default = false
   validation {
     condition     = (var.enable_private_dns == true || var.enable_private_dns == false )
     error_message = "DNS Support flag must be either true or false."
@@ -430,23 +485,12 @@ variable "on_premises_cidrs" {
   default = [ "172.16.0.0/16", "172.17.0.0/16", "172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.22.0.0/16" ]
 }
 
-variable "security_grp_traffic_pattern" {
-  type = map(bool)
-  default = {
-    database                = true
-    web                     = true
-    kafka_zookeeper         = false
-    elasticsearch           = false
-    apache_spark            = false
-
-  }
-}
 
 
 # ---------------------------------------------------------------------------------------------------------------
 ##################################################### TAGS ######################################################
 # ---------------------------------------------------------------------------------------------------------------
-
+####### MUST CONFIGURE #######
 # Variables that makes up the AWS Tags assigned to the VPC on creation.
 # ---------------------------------------------------------------------------------------------------------------
 
@@ -459,13 +503,13 @@ variable "Application_ID" {
 variable "Application_Name" {
   description = "The name of the application. Max 10 characters. Allowed characters [0-9A-Za-z]."
   type = string
-  default = "fsf-spoke-vpc"
+  default = "fsf_app_name"
 }
 
 variable "Business_Unit" {
   description = "The business unit or line of business to which this application belongs."
   type = string
-  default = "Commercial Banking (CB)"
+  default = "Commercial_Banking"
 }
 
 variable "Environment_Type" {
@@ -477,7 +521,7 @@ variable "Environment_Type" {
 variable "CostCenterCode" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
-  default = "CB-0000000"
+  default = "CB_0000000"
 }
 
 variable "CreatedBy" {
@@ -490,8 +534,4 @@ variable "Manager" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
   default = "KenJackson"
-}
-
-variable "api_x_key" {
-  default = "eInSTeInXtHe0rY7rEltiv!ty"
 }

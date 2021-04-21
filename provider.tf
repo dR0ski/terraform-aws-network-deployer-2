@@ -1,5 +1,5 @@
 provider "aws" {
-  region = var.aws_region
+  region = var.aws_region.n_virginia
 }
 
 # NORTHERN VIRGINIA : us-east-1
@@ -117,6 +117,12 @@ provider "aws" {
 provider "aws" {
   region = "eu-west-3"
   alias = "paris"
+}
+
+# PARIS : eu-west-3
+provider "aws" {
+  region = "eu-west-3"
+  alias = "paris-iam"
 }
 
 

@@ -27,6 +27,7 @@ resource "aws_ssm_parameter" "route53_resolver_rules" {
   name  = "fsf_route53_resolver_rules_dict"
   type  = "String"
   value = "0"
+  tags = local.default_tags
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -35,7 +36,7 @@ resource "aws_ssm_parameter" "route53_resolver_rules" {
 resource "aws_route53_resolver_endpoint" "inbound_resolver" {
   name = var.Environment_Type
   direction = "INBOUND"
-
+  tags = local.default_tags
   security_group_ids = [var.external_security_id]
 
     dynamic "ip_address" {
@@ -56,7 +57,7 @@ resource "aws_route53_resolver_endpoint" "inbound_resolver" {
 resource "aws_route53_resolver_endpoint" "outbound_resolver" {
   name = var.Environment_Type
   direction = "OUTBOUND"
-
+  tags = local.default_tags
   security_group_ids = [var.external_security_id]
 
   dynamic "ip_address" {

@@ -10,7 +10,21 @@
 # ---------------------------------------------------------------------------------------------------------------
 data "aws_organizations_organization" "my_aws_organization" {}
 
-
+# ---------------------------------------------------------------------------------------------------------------
+# Object that contains a list of key value pairs that forms the tags added to a VPC on creation
+# ---------------------------------------------------------------------------------------------------------------
+locals {
+  default_tags = {
+    Name                 = var.Application_Name
+    Application_ID       = var.Application_ID
+    Application_Name     = var.Application_Name
+    Business_Unit        = var.Business_Unit
+    CostCenterCode       = var.CostCenterCode
+    CreatedBy            = var.CreatedBy
+    Manager              = var.Manager
+    Environment_Type     = var.Environment_Type
+  }
+}
 
 locals {
   timestamp = timestamp()
@@ -20,6 +34,7 @@ locals {
 
 resource "aws_cloudwatch_event_bus" "network_event_bus" {
   name = "aws-fsf-network-operations-event-bus-${var.vpc_type}"
+  tags = local.default_tags
 }
 
 
