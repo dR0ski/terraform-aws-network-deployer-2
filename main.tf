@@ -23,6 +23,7 @@ locals{
   spoke-name = "fsf_spoke_vpc"
   shared-joint-name = join("_", [local.shared-services-name, random_uuid.uuid_a.result])
   spoke-joint-name = join("_", [local.spoke-name, random_uuid.uuid_a.result])
+  pave-joint-name = join("_", ["fsf_network_paving", random_uuid.uuid_a.result])
 }
 
 # ---------------------------------------------------------------------------------------------------------------

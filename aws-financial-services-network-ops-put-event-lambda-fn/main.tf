@@ -30,6 +30,7 @@ data "archive_file" "zip"{
   output_path = "${path.module}/lambda_function.zip" #"lambda_function.zip"
 }
 
+
 locals {
   timestamp = timestamp()
   timestamp_sanitized = replace(local.timestamp, "/[- TZ:]/", "")
@@ -66,6 +67,7 @@ resource "aws_iam_policy" "route53_private_hosted_zone_assoc_policy" {
 EOF
 
 }
+
 
 resource "aws_iam_role" "iam_for_lambda" {
   name = join("_", ["${var.vpc_type}-route53_phz_assoc_fn", local.timestamp_sanitized])
@@ -112,5 +114,3 @@ resource "aws_lambda_function" "route53_association_lambda" {
 }
 
 # ----------------------------------------------------------------------------------------------------------
-
-

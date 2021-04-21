@@ -1,56 +1,28 @@
 #---------------------------------------------------------------------
-# VPC ID
+# EventBridge EventBus Output Value |
 #---------------------------------------------------------------------
-output "vpc_id" {
-  value = module.spoke_vpc.vpc_id
-}
-
-output "vpc_cidr_block" {
-  value = module.spoke_vpc.vpc_cidr_block
-}
-
-output "aws_region" {
-  value = var.aws_region
-}
-
-output "this_vpc_flow_log_id" {
-  value = module.fsf-spoke-vpc-flow-logs.flow_log_id
-}
-
-
-#---------------------------------------------------------------------
-# Subnet IDs
-#---------------------------------------------------------------------
-output "this_aws_routable_subnets" {
-  value = module.fsf-spoke-vpc-subnets.routable_subnets
-}
-
-output "this_externally_routable_subnets" {
-  value = module.fsf-spoke-vpc-subnets.externally_routable_subnets
-}
-
-output "this_transit_gateway_subnets" {
-  value = module.fsf-spoke-vpc-subnets.transit_gateway_subnets
+output "vpc_network_operations_eventbus_arn" {
+  value = module.fsf-vpc-network-operations-eventbus.eventbus_arn
 }
 
 #---------------------------------------------------------------------
-# Route Table IDs
+# AWS Lambda | Network Operations Lambda Function Outputs
 #---------------------------------------------------------------------
-output "this_aws_routable_routing_table_id" {
-  value = module.fsf-spoke-create-vpc-route-tables.aws_routable_routing_table_id
+output "vpc-network-operations-lambda-fn-name" {
+  value = module.fsf-vpc-network-operations-lambda-fn.network-ops-lambda-fn-name
 }
 
-output "this_externally_routable_routing_table_id" {
-  value = module.fsf-spoke-create-vpc-route-tables.externally_routable_routing_table_id
+output "vpc-network-operations-lambda-fn-arn" {
+  value = module.fsf-vpc-network-operations-lambda-fn.network-ops-lambda-fn-arn
 }
 
-output "this_tgw_attachment_routing_table_id" {
-  value = module.fsf-spoke-create-vpc-route-tables.tgw_attachment_routing_table_id
+output "vpc-network-operations-lambda-fn-id" {
+  value = module.fsf-vpc-network-operations-lambda-fn.network-ops-lambda-fn-id
 }
 
 #---------------------------------------------------------------------
-# EventBridge EventBus Info |
+# AWS Lambda | Network Operations Put Event Lambda Function Output
 #---------------------------------------------------------------------
-output "this_eventbridge_networkops_eventbus_arn" {
-  value = module.fsf-spoke-vpc-network-operations-eventbus.eventbus_arn
+output "vpc-network-operations-put-event-lambda-fn-name" {
+  value = module.fsf-vpc-network-operations-put-event-lambda-fn.network-ops-put-event-lambda-fn-name
 }

@@ -13,8 +13,9 @@
 variable "which_vpc_type_are_you_creating" {
   type = map(bool)
   default = {
-    shared_services_vpc = false    # Specify true or false
-    spoke_vpc           = false    # Specify true or false
+    shared_services_vpc     = false    # Specify true or false
+    spoke_vpc               = false    # Specify true or false
+    # pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = true    # Specify true or false
   }
 }
 
@@ -140,6 +141,11 @@ variable "route53_acts" {
 }
 
 
+variable "vpc_env_type"{
+  default="fsf"
+}
+
+
 # ---------------------------------------------------------------------------------------------------------------
 # AWS REGION | REGION CODE MAPPED TO REGION NAME
 # ---------------------------------------------------------------------------------------------------------------
@@ -170,8 +176,6 @@ variable "aws_region"{
     sao_paulo         = "sa-east-1"
   }
 }
-
-variable "vpc_env_type"{default="spoke"}
 
 
 variable "rule_type" {

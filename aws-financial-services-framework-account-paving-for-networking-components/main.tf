@@ -1,59 +1,72 @@
-/*
- ---------------------------------------------------------------------------------------------------------------
- AWS Transit Gateway Terraform Module State | -------> Loaded from Amazon S3
- ---------------------------------------------------------------------------------------------------------------
-
-This data source loads the terraform state file from the terraform backend where it is stored.In this case the
-backend used is Amazon S3. If you use a different backend then please change the backend configuration
-to match your backend.
-
-If you dont have a back then please comment out this data source block.
-
-*/
-
-
-data "terraform_remote_state" "shared_services_network" {
-  backend = "s3"
-  config = {
-    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
-    bucket = var.tf_shared_services_backend_s3_bucket_name
-    # Please populate with the key name the terraform.tfstate file for your transit_gateway
-    key = var.tf_shared_services_backend_state_file_s3_prefixpath_n_key_name
-    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
-    region = var.tf_shared_services_backend_s3_bucket_aws_region
+# ---------------------------------------------------------------------------------------------------------------
+# Object that contains a list of key value pairs that forms the tags added to a VPC on creation
+# ---------------------------------------------------------------------------------------------------------------
+locals {
+  default_tags = {
+    Name                 = var.Application_Name
+    Application_ID       = var.Application_ID
+    Application_Name     = var.Application_Name
+    Business_Unit        = var.Business_Unit
+    CostCenterCode       = var.CostCenterCode
+    CreatedBy            = var.CreatedBy
+    Manager              = var.Manager
+    Environment_Type     = var.Environment_Type
   }
 }
 
 # ---------------------------------------------------------------------------------------------------------------
-
-
+# AWS Lambda Function | Adds Network Events to the EventBus that was created for Networking Events
 # ---------------------------------------------------------------------------------------------------------------
-# AWS Route 53 Private Hosted Zone Put Event
-# ---------------------------------------------------------------------------------------------------------------
-module "fsf-spoke-phz-put-event" {
+module "fsf-vpc-network-operations-put-event-lambda-fn" {
   source  = "../aws-financial-services-network-ops-put-event-lambda-fn"
-  depends_on = [module.fsf-spoke-vpc-network-operations-lambda-fn]
-
+  depends_on = [module.fsf-vpc-network-operations-lambda-fn]
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 
 # ---------------------------------------------------------------------------------------------------------------
-# AWS Route 53 Resolver Inbound Endpoint
+# AWS Lambda Function | Performs Networking Tasks for Transit Gateway, Centralized DNS and VPC Endpoints operations
 # ---------------------------------------------------------------------------------------------------------------
-module "fsf-spoke-vpc-network-operations-lambda-fn" {
+module "fsf-vpc-network-operations-lambda-fn" {
   source  = "../aws-financial-services-network-ops-lambda-fn"
-  vpc_type =  var.vpc_env_type
+  vpc_type =  var.vpc_type
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 # ---------------------------------------------------------------------------------------------------------------
-# AWS Route 53 Resolver Inbound Endpoint
+# AWS EventBridge EventBus Creation | Built with EventBus Rules that triggers the Network Operations Lambda Function
 # ---------------------------------------------------------------------------------------------------------------
-module "fsf-spoke-vpc-network-operations-eventbus" {
+module "fsf-vpc-network-operations-eventbus" {
   source  = "../aws-financial-services-framework-eventbridge-network-bus"
-  vpc_type =  var.vpc_env_type
-  network-ops-lambda-fn-name = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-name
-  network-ops-lambda-fn-arn = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-arn
-  network-ops-lambda-fn-id = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-id
+  vpc_type =  var.vpc_type
+  network-ops-lambda-fn-name = module.fsf-vpc-network-operations-lambda-fn.network-ops-lambda-fn-name
+  network-ops-lambda-fn-arn = module.fsf-vpc-network-operations-lambda-fn.network-ops-lambda-fn-arn
+  network-ops-lambda-fn-id = module.fsf-vpc-network-operations-lambda-fn.network-ops-lambda-fn-id
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 /*
