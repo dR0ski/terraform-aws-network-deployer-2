@@ -98,7 +98,9 @@ variable "security_grp_traffic_pattern" {
 # ---------------------------------------------------------------------------------------------------------------
 # VPC Endpoint Boolean Map
 # ---------------------------------------------------------------------------------------------------------------
-######### MUST BE CONFIGURED ##############
+######### MUST BE CONFIGURED IF YOU ARE DEPLOYING A STAND ALONE SPOKE VPC. ##############
+#########        DO NOT CONFIGURE IF DEPLOYING A SHARED SERVICES VPC     ##############
+# ---------------------------------------------------------------------------------------------------------------
 variable "endpoints" {
   type = map(bool)
   default = {
@@ -486,7 +488,6 @@ variable "on_premises_cidrs" {
 }
 
 
-
 # ---------------------------------------------------------------------------------------------------------------
 ##################################################### TAGS ######################################################
 # ---------------------------------------------------------------------------------------------------------------
@@ -497,19 +498,18 @@ variable "on_premises_cidrs" {
 variable "Application_ID" {
   description = "The Application ID of the application that will be hosted inside this Amazon VPC."
   type = string
-  default = "0000000"
+  default = "please_add_this_info"
 }
 
 variable "Application_Name" {
   description = "The name of the application. Max 10 characters. Allowed characters [0-9A-Za-z]."
   type = string
-  default = "fsf_app_name"
 }
 
 variable "Business_Unit" {
   description = "The business unit or line of business to which this application belongs."
   type = string
-  default = "Commercial_Banking"
+  default = "please_add_this_info"
 }
 
 variable "Environment_Type" {
@@ -533,5 +533,5 @@ variable "CreatedBy" {
 variable "Manager" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
-  default = "KenJackson"
+  default = "please_add_this_info"
 }
