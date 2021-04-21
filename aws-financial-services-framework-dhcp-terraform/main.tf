@@ -52,12 +52,12 @@ resource "aws_vpc_dhcp_options" "custom_dhcp_options" {
   ntp_servers          = var.ntp_servers
   netbios_name_servers = var.netbios_name_servers
   netbios_node_type    = var.netbios_node_type
-  count                = (var.create_dhcp_options.dhcp_options == false && var.create_dhcp_options.custom_dhcp_options == true  ? 1 : 0)
+  count                = (var.create_dhcp_options.dhcp_options == true && var.create_dhcp_options.custom_dhcp_options == true  ? 1 : 0)
   tags                 = local.default_tags
 }
 
 resource "aws_vpc_dhcp_options_association" "custom_dhcp_association" {
-  count           = (var.create_dhcp_options.dhcp_options == false && var.create_dhcp_options.custom_dhcp_options == true  ? 1 : 0)
+  count           = (var.create_dhcp_options.dhcp_options == true && var.create_dhcp_options.custom_dhcp_options == true  ? 1 : 0)
   dhcp_options_id = aws_vpc_dhcp_options.custom_dhcp_options[count.index].id
   vpc_id          = var.vpc_id
 }

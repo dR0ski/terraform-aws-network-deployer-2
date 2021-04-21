@@ -8,7 +8,6 @@ backend used is Amazon S3. If you use a different backend then please change the
 to match your backend.
 
 If you dont have a back then please comment out this data source block.
-
 */
 
 data "terraform_remote_state" "transit_gateway_network" {
@@ -63,19 +62,22 @@ locals {
   tgw_prod_route_table                  = join("_", [local.region_name,"tgw_production_route_table_id"])
 }
 
-
+/*
 # ---------------------------------------------------------------------------------------------------------------
 # AWS Route 53 Private Hosted Zone Put Event
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-spoke-phz-put-event" {
   source  = "../aws-financial-services-network-ops-put-event-lambda-fn"
   depends_on = [module.fsf-spoke-vpc-network-operations-lambda-fn]
-  vpc_id                              = data.terraform_remote_state.shared_services_network.outputs.shared_services_vpc_id
-  private_hosted_zone_id              = module.fsf-spoke-dns-private-hosted-zones.private-hosted-zone-id
-  vpc_region                          = var.aws_region
-  eventbus_arn                        = data.terraform_remote_state.shared_services_network.outputs.shared_services_networkops_eventbus_arn
-  vpc_type                            =  var.vpc_env_type
-  route53_acts                        = var.route53_acts
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 
@@ -85,6 +87,15 @@ module "fsf-spoke-phz-put-event" {
 module "fsf-spoke-vpc-network-operations-lambda-fn" {
   source  = "../aws-financial-services-network-ops-lambda-fn"
   vpc_type =  var.vpc_env_type
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -96,8 +107,17 @@ module "fsf-spoke-vpc-network-operations-eventbus" {
   network-ops-lambda-fn-name = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-name
   network-ops-lambda-fn-arn = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-arn
   network-ops-lambda-fn-id = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-id
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
-
+*/
 # ---------------------------------------------------------------------------------------------------------------
 # The Spoke VPC creation
 # ---------------------------------------------------------------------------------------------------------------
@@ -178,7 +198,8 @@ module "fsf-spoke-create-vpc-route-tables" {
 # AWS Transit Gateway | This module submits a TGW association request then automatically configure TGW route tables
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-spoke_vpc-transit-gateway-association" {
-  source                                            = "../aws-financial-services-framework-transit-gateway-association-spoke"
+  count = (var.transit_gateway_association_instructions.create_transit_gateway_association==true && (var.transit_gateway_association_instructions.access_shared_services_vpc == true || var.transit_gateway_association_instructions.perform_east_west_packet_inspection==true) ? 1:0)
+  source                                            = "../aws-financial-services-framework-transit-gateway-association-n-route-configuration"
   vpc_id                                            = module.spoke_vpc.vpc_id
   environment_type                                  = var.Environment_Type
   transit_gateway_id                                = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_id, "transit gateway ID not found")        #paris_transit_gateway_id
@@ -202,6 +223,8 @@ module "fsf-spoke_vpc-transit-gateway-association" {
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-spoke-vpc-add-route" {
   source                          = "../aws-financial-services-framework-add-routes"
+  count = (var.transit_gateway_association_instructions.create_transit_gateway_association == true ? 1:0)
+  depends_on = [module.fsf-spoke-vpc-subnets, module.fsf-spoke-create-vpc-route-tables, module.fsf-spoke_vpc-transit-gateway-association, module.fsf-spoke-vpc-endpoints]
   aws_route_table_id              = module.fsf-spoke-create-vpc-route-tables.aws_routable_routing_table_id
   external_route_table_id         = module.fsf-spoke-create-vpc-route-tables.externally_routable_routing_table_id
   tgw_aws_route_destination       = var.tgw_aws_route_destination
@@ -244,27 +267,62 @@ module "fsf-spoke-vpc-security-groups" {
 # AWS Route 53 | Creates Private Hosted Zone(s)
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-spoke-dns-private-hosted-zones" {
+  count = (var.route53_acts.create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc==true && var.route53_acts.create_standalone_private_hosted_zone==false) ? length(var.private_hosted_zone_name):0
   source  = "../aws-financial-services-framework-dns-private-hosted-zones"
   vpc_id                              = module.spoke_vpc.vpc_id
-  private_hosted_zone_name            = ["anaconda.aws-fsf-corp.com"]
+  private_hosted_zone_name            = var.private_hosted_zone_name
   vpc_region                          = var.aws_region
   eventbus_arn                        = data.terraform_remote_state.shared_services_network.outputs.shared_services_networkops_eventbus_arn
   shared_services_vpc_id              = data.terraform_remote_state.shared_services_network.outputs.shared_services_vpc_id
   route53_acts                        = var.route53_acts
   route53_association_lambda_fn_name  = module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
   rule_type                           = var.rule_type
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
+module "fsf-spoke-dns-standalone-private-hosted-zones" {
+  count = (var.route53_acts.create_standalone_private_hosted_zone==true &&  var.route53_acts.create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc==false) ? length(var.private_hosted_zone_name):0
+  source  = "../aws-financial-services-framework-dns-stand-alone-private-hosted-zones"
+  vpc_id                              = module.spoke_vpc.vpc_id
+  private_hosted_zone_name            = var.private_hosted_zone_name
+  route53_acts                        = var.route53_acts
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
+}
 
 # ---------------------------------------------------------------------------------------------------------------
 # AWS Route 53 | Creates Resolver Endpoints
 # ---------------------------------------------------------------------------------------------------------------
-module "fsf-spoke-vpc-dns" {
+module "fsf-spoke-vpc-dns-resolver" {
   source  = "../aws-financial-services-framework-dns-resolvers"
   external_security_id                = module.fsf-spoke-vpc-security-groups.non_routable_security_group_id
   externally_routable_subnet_id       = module.fsf-spoke-vpc-subnets.routable_subnets
   vpc_id                              = module.spoke_vpc.vpc_id
   resolver_query_logging_destination  = ""
+  # Tags
+  # -------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = var.Application_Name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
 }
 
 

@@ -29,16 +29,17 @@ locals {
 # Route 53 Private Hosted Zone | -> Creation
 # ---------------------------------------------------------------------------------------------------------------
 resource "aws_route53_zone" "private_hosted_zone_1" {
-  count             = length(var.private_hosted_zone_name)>0 && var.route53_acts.create_private_hosted_zone==true ? length(var.private_hosted_zone_name) : 0
+  count             = length(var.private_hosted_zone_name)>0 && var.route53_acts.create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc==true ? length(var.private_hosted_zone_name) : 0
   name              = var.private_hosted_zone_name[count.index]
   vpc {
     vpc_id          = var.vpc_id
   }
+  tags = local.default_tags
 }
 
 
 resource "aws_route53_vpc_association_authorization" "route_53_assoc_authorization" {
-  count             = length(var.private_hosted_zone_name)>0 && var.route53_acts.create_private_hosted_zone==true ? length(var.private_hosted_zone_name) : 0
+  count             = length(var.private_hosted_zone_name)>0 && var.route53_acts.create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc==true && var.route53_acts.associate_with_dns_vpc_or_a_shared_services_vpc==true ? length(var.private_hosted_zone_name) : 0
   vpc_id  = var.shared_services_vpc_id
   zone_id = aws_route53_zone.private_hosted_zone_1[count.index].id
 }
@@ -48,7 +49,7 @@ resource "aws_route53_vpc_association_authorization" "route_53_assoc_authorizati
 # AWS Lambda | Invoking the FN that adds the creation of this PHZ as an event in the Shared Service EventBus
 # ---------------------------------------------------------------------------------------------------------------
 data "aws_lambda_invocation" "route53_private_hosted_zone_association" {
-  count = var.attach_to_centralize_dns_solution == true && var.route53_acts.create_private_hosted_zone==true ? length(var.private_hosted_zone_name):0
+  count = var.route53_acts.associate_with_private_hosted_zone_with_centralized_dns_solution == true && var.route53_acts.create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc==true ? length(var.private_hosted_zone_name):0
   function_name = var.route53_association_lambda_fn_name
   input = <<JSON
   {

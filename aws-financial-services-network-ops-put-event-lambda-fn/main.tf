@@ -8,12 +8,28 @@
 
 data "aws_organizations_organization" "my_aws_organization" {}
 
+# Object that contains a list of key value pairs that forms the tags added to a VPC on creation
+# ---------------------------------------------------------------------------------------------------------------
+locals {
+  default_tags = {
+    Name                 = var.Application_Name
+    Application_ID       = var.Application_ID
+    Application_Name     = var.Application_Name
+    Business_Unit        = var.Business_Unit
+    CostCenterCode       = var.CostCenterCode
+    CreatedBy            = var.CreatedBy
+    Manager              = var.Manager
+    Environment_Type     = var.Environment_Type
+  }
+}
+
 
 data "archive_file" "zip"{
   type = "zip"
   source_file = "${path.module}/lambda_function.py" #"lambda_function.py"
   output_path = "${path.module}/lambda_function.zip" #"lambda_function.zip"
 }
+
 
 locals {
   timestamp = timestamp()
@@ -52,6 +68,7 @@ EOF
 
 }
 
+
 resource "aws_iam_role" "iam_for_lambda" {
   name = join("_", ["${var.vpc_type}-route53_phz_assoc_fn", local.timestamp_sanitized])
   assume_role_policy = <<EOF
@@ -86,21 +103,14 @@ resource "aws_iam_role_policy_attachment" "Route53ExecutionRole" {
 resource "aws_lambda_function" "route53_association_lambda" {
 
   filename      = data.archive_file.zip.output_path
-  function_name = join("_", ["${var.vpc_type}-initiate-phz-assoc", local.timestamp_sanitized])
+  function_name = join("_", ["${var.vpc_type}-networking-event-writer", local.timestamp_sanitized])
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "lambda_function.lambda_handler"
   source_code_hash = data.archive_file.zip.output_base64sha256
   runtime = "python3.8"
   timeout = 900
   memory_size = 512
-
-  //  environment {
-  //    variables = {
-  //      ec2_private_hosted_zone_id = aws_route53_zone.ec2_endpoint_phz[0].zone_id
-  //    }
-  //  }
+  tags = local.default_tags
 }
 
 # ----------------------------------------------------------------------------------------------------------
-
-

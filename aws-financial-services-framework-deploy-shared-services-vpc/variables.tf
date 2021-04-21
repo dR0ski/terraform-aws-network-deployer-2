@@ -29,36 +29,21 @@ variable "rule_type" {
 # ---------------------------------------------------------------------------------------------------------------
 #  TRANSIT GATEWAY TERRAFORM BACKEND | -> Configuration Parameters
 # ---------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------
+#  TRANSIT GATEWAY BACKEND Configuration
+# ---------------------------------------------------------------------------------------------------------------
 
 variable "tf_backend_s3_bucket_aws_region"{
-  default = "us-east-2"
+  default = "AWS-REGION-CODE"
 }
 
 variable "tf_backend_s3_bucket_name"{
-  default = "aws-fsf-team-terraform-state-storage"
+  default = "YOUR-AWS-S3-BUCKET-NAME"
 }
 
 
 variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "aws-fsf-terraform-network-state/transit-gateway/terraform.tfstate"
-}
-
-
-
-# ---------------------------------------------------------------------------------------------------------------
-#  SHARED SERVICES TERRAFORM BACKEND | -> Configuration Parameters
-# ---------------------------------------------------------------------------------------------------------------
-
-variable "tf_shared_services_backend_s3_bucket_aws_region"{
-  default = "us-east-2"
-}
-
-variable "tf_shared_services_backend_s3_bucket_name"{
-  default = "aws-fsf-team-terraform-state-storage"
-}
-
-variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "aws-fsf-terraform-network-state/shared-services-vpc/terraform.tfstate"
+  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-YOUR-TRANSIT-GATEWAY-STATE-FILE"
 }
 
 

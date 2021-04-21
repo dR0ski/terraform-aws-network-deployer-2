@@ -4,13 +4,21 @@ variable "aws_region"{
 
 variable "vpc_env_type"{default="spoke"}
 
+variable "private_hosted_zone_name"{
+  type = list(string)
+  default =  ["anaconda.aws-fsf-corp.com"]
+}
+
 variable "route53_acts" {
   type = map(bool)
   default = {
-    create_private_hosted_zone                  = true
-    create_forwarding_rule_for_sub_domain       = false
-    create_forwarding_rule_for_domain           = true
-    share_forwarding_rule_with_aws_organization = true
+    create_standalone_private_hosted_zone                                       = true  # Specify true or false
+    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
+    associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
+    associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
+    create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
+    create_forwarding_rule_for_domain                                           = false # Specify true or false
+    share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
   }
 }
 
@@ -25,21 +33,24 @@ variable "rule_type" {
   }
 }
 
+
+
+
 # ---------------------------------------------------------------------------------------------------------------
 #  TERRAFORM Backend Configuration Parameters
 # ---------------------------------------------------------------------------------------------------------------
 
 variable "tf_backend_s3_bucket_aws_region"{
-  default = "us-east-2"
+  default = "AWS-REGION-CODE"
 }
 
 variable "tf_backend_s3_bucket_name"{
-  default = "aws-fsf-team-terraform-state-storage"
+  default = "YOUR-AWS-S3-BUCKET-NAME"
 }
 
 
 variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "aws-fsf-terraform-network-state/transit-gateway/terraform.tfstate"
+  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-YOUR-TRANSIT-GATEWAY-STATE-FILE"
 }
 
 
@@ -48,17 +59,17 @@ variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
 # ---------------------------------------------------------------------------------------------------------------
 
 variable "tf_shared_services_backend_s3_bucket_aws_region"{
-  default = "us-east-2"
+  default = "AWS-REGION-CODE"
 }
 
 
 variable "tf_shared_services_backend_s3_bucket_name"{
-  default = "aws-fsf-team-terraform-state-storage"
+  default = "YOUR-AWS-S3-BUCKET-NAME"
 }
 
 
 variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "aws-fsf-terraform-network-state/vpc-deployment/vpc-type/shared-services/dev/terraform.tfstate"
+  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-YOUR-SHARED-SERVICES-VPC-STATE-FILE"
 }
 
 
@@ -67,7 +78,7 @@ variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
 # ---------------------------------------------------------------------------------------------------------------
 
 variable "resolver_query_logging_destination"{
-  default = "arn:aws:s3:::aws-fsf-team-terraform-state-storage/route53-rsolver-query-logs"
+  default = "add s3 bucket location to store query logs"
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -227,7 +238,7 @@ variable "custom_domain_name" {
 
 
 variable "domain_name_servers" {
-  default = ["127.0.0.1", "10.0.0.2"]
+  default = ["127.0.0.1"]
 }
 
 variable "ntp_servers" {
@@ -260,7 +271,6 @@ variable "transit_gateway_association_instructions" {
     perform_east_west_packet_inspection                       = false
     allow_onprem_access_to_entire_vpc_cidr_range              = false
     allow_onprem_access_to_externally_routable_vpc_cidr_range = false
-
   }
 }
 
