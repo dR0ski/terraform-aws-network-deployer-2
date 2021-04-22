@@ -20,6 +20,7 @@ locals {
 module "fsf-vpc-network-operations-put-event-lambda-fn" {
   source  = "../aws-financial-services-network-ops-put-event-lambda-fn"
   depends_on = [module.fsf-vpc-network-operations-lambda-fn]
+  vpc_type =  var.vpc_type
   # Tags
   # -------
   Application_ID                            = var.Application_ID

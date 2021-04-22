@@ -53,3 +53,38 @@ output "spoke_vpc_transit_gateway_subnet_id" {
 output "spoke_vpc_networkops_eventbus_arn" {
   value = concat(module.spoke_vpc.*.this_eventbridge_networkops_eventbus_arn, [null])[0]
 }
+
+
+
+#---------------------------------------------------------------------
+# NETWORK PAVING COMPONENTS | Outputs
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# EventBridge EventBus Output Value |
+#---------------------------------------------------------------------
+output "vpc_network_operations_eventbus_arn" {
+  value = concat(module.pave_account_with_network_orchestration_components.*.vpc_network_operations_eventbus_arn, [null])[0]
+}
+
+#---------------------------------------------------------------------
+# AWS Lambda | Network Operations Lambda Function Outputs
+#---------------------------------------------------------------------
+output "vpc-network-operations-lambda-fn-name" {
+  value = concat(module.pave_account_with_network_orchestration_components.*.vpc-network-operations-lambda-fn-name, [null])[0]
+}
+
+output "vpc-network-operations-lambda-fn-arn" {
+  value = concat(module.pave_account_with_network_orchestration_components.*.vpc-network-operations-lambda-fn-arn, [null])[0]
+}
+
+output "vpc-network-operations-lambda-fn-id" {
+  value = concat(module.pave_account_with_network_orchestration_components.*.vpc-network-operations-lambda-fn-id, [null])[0]
+}
+
+#---------------------------------------------------------------------
+# AWS Lambda | Network Operations Put Event Lambda Function Output
+#---------------------------------------------------------------------
+output "vpc-network-operations-put-event-lambda-fn-name" {
+  value = concat(module.pave_account_with_network_orchestration_components.*.vpc-network-operations-put-event-lambda-fn-name, [null])[0]
+}

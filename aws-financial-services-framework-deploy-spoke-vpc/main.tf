@@ -35,6 +35,33 @@ data "terraform_remote_state" "shared_services_network" {
   }
 }
 
+
+data "terraform_remote_state" "shared_services_network_paving_components" {
+  backend = "s3"
+  config = {
+    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+    bucket = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
+    # Please populate with the key name the terraform.tfstate file for your transit_gateway
+    key = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+    region = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
+  }
+}
+
+
+data "terraform_remote_state" "this_account_network_paving_components" {
+  backend = "s3"
+  config = {
+    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+    bucket = var.tf_this_account_network_paving_components_backend_s3_bucket_name
+    # Please populate with the key name the terraform.tfstate file for your transit_gateway
+    key = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+    region = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
+  }
+}
+
+
 # ---------------------------------------------------------------------------------------------------------------
 
 # Object that contains a list of key value pairs that forms the tags added to a VPC on creation
@@ -61,8 +88,8 @@ locals {
   tgw_packet_inspection_route_table     = join("_", [local.region_name,"tgw_packet_inspection_route_table_id"])
   tgw_prod_route_table                  = join("_", [local.region_name,"tgw_production_route_table_id"])
 }
-
 /*
+
 # ---------------------------------------------------------------------------------------------------------------
 # AWS Route 53 Private Hosted Zone Put Event
 # ---------------------------------------------------------------------------------------------------------------
@@ -118,6 +145,7 @@ module "fsf-spoke-vpc-network-operations-eventbus" {
   Environment_Type                          = var.Environment_Type
 }
 */
+
 # ---------------------------------------------------------------------------------------------------------------
 # The Spoke VPC creation
 # ---------------------------------------------------------------------------------------------------------------
@@ -213,8 +241,9 @@ module "fsf-spoke_vpc-transit-gateway-association" {
   transit_gateway_subnets_exist                     = module.fsf-spoke-vpc-subnets.tgw_routable_enabled  # var.subnet_type.transit_gateway_subnet
   access_shared_services_vpc                        = var.transit_gateway_association_instructions.access_shared_services_vpc
   perform_east_west_packet_inspection               = var.transit_gateway_association_instructions.perform_east_west_packet_inspection
-  route53_association_lambda_fn_name                = module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
-  eventbus_arn                                      = data.terraform_remote_state.shared_services_network.outputs.shared_services_networkops_eventbus_arn
+  route53_association_lambda_fn_name                = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
+  # EVENT BUS ARN FOR THE TGW ACCOUNT NETWORKING COMPONENTS.
+  eventbus_arn                                      = data.terraform_remote_state.shared_services_network_paving_components.outputs.vpc_network_operations_eventbus_arn #.shared_services_networkops_eventbus_arn
 }
 
 
@@ -272,10 +301,10 @@ module "fsf-spoke-dns-private-hosted-zones" {
   vpc_id                              = module.spoke_vpc.vpc_id
   private_hosted_zone_name            = var.private_hosted_zone_name
   vpc_region                          = var.aws_region
-  eventbus_arn                        = data.terraform_remote_state.shared_services_network.outputs.shared_services_networkops_eventbus_arn
+  eventbus_arn                        = data.terraform_remote_state.shared_services_network_paving_components.outputs.vpc_network_operations_eventbus_arn
   shared_services_vpc_id              = data.terraform_remote_state.shared_services_network.outputs.shared_services_vpc_id
   route53_acts                        = var.route53_acts
-  route53_association_lambda_fn_name  = module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
+  route53_association_lambda_fn_name  = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name
   rule_type                           = var.rule_type
   # Tags
   # -------
@@ -331,15 +360,15 @@ module "fsf-spoke-vpc-dns-resolver" {
 # ---------------------------------------------------------------------------------------------------------------
 data "aws_lambda_invocation" "hi_centralized_asset_assoc_me_with_your_endpoints" {
   count = (var.is_centralize_interface_endpoints_available.is_centralized_interface_endpoints==true && var.is_centralize_interface_endpoints_available.associate_with_private_hosted_zones==true) ? 1:0
-  depends_on = [module.spoke_vpc, module.fsf-spoke-vpc-subnets, module.fsf-spoke-vpc-security-groups, module.fsf-spoke-vpc-network-operations-eventbus, module.fsf-spoke-phz-put-event]
-  function_name = module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
+  depends_on = [module.spoke_vpc, module.fsf-spoke-vpc-subnets, module.fsf-spoke-vpc-security-groups]
+  function_name = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
   input = <<JSON
   {
     "event_type": "centralized_interface_endpoints_association_request",
     "vpc_id": "${module.spoke_vpc.vpc_id}",
     "vpc_region": "${var.aws_region}",
-    "eventbus_arn": "${data.terraform_remote_state.shared_services_network.outputs.shared_services_networkops_eventbus_arn}",
-    "spoke_eventbus_arn": "${module.fsf-spoke-vpc-network-operations-eventbus.eventbus_arn}"
+    "eventbus_arn": "${data.terraform_remote_state.shared_services_network_paving_components.outputs.vpc_network_operations_eventbus_arn}",
+    "spoke_eventbus_arn": "${data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn}"
   }
 JSON
 
@@ -351,14 +380,14 @@ JSON
 # ---------------------------------------------------------------------------------------------------------------
 data "aws_lambda_invocation" "hi_centralized_asset_assoc_me_with_your_dns_resource_shares" {
   count = (var.attach_to_centralize_dns_solution==true) ? 1:0
-  depends_on = [module.spoke_vpc, module.fsf-spoke-vpc-subnets, module.fsf-spoke-vpc-security-groups, module.fsf-spoke-vpc-network-operations-eventbus, module.fsf-spoke-phz-put-event, data.aws_lambda_invocation.hi_centralized_asset_assoc_me_with_your_endpoints]
-  function_name = module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
+  depends_on = [module.spoke_vpc, module.fsf-spoke-vpc-subnets, module.fsf-spoke-vpc-security-groups, data.aws_lambda_invocation.hi_centralized_asset_assoc_me_with_your_endpoints]
+  function_name = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
   input = <<JSON
   {
     "event_type": "centralized_dns_association_request",
     "vpc_id": "${module.spoke_vpc.vpc_id}",
     "vpc_region": "${var.aws_region}",
-    "eventbus_arn": "${module.fsf-spoke-vpc-network-operations-eventbus.eventbus_arn}"
+    "eventbus_arn": "${data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn}"
   }
 JSON
 

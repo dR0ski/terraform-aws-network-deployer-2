@@ -15,12 +15,12 @@ variable "which_vpc_type_are_you_creating" {
   default = {
     shared_services_vpc     = false    # Specify true or false
     spoke_vpc               = false    # Specify true or false
-    # pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = true    # Specify true or false
+    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or false
   }
 }
 
 # ---------------------------------------------------------------------------------------------------------------
-#  Terraform Backend Configuration for AWS Transit Gateway  |
+#  AWS TRANSIT GATEWAY | Terraform Backend Configuration for use with Terraform Backend Data Source
 # ---------------------------------------------------------------------------------------------------------------
 variable "tf_backend_s3_bucket_aws_region"{
   default = "us-east-2"
@@ -28,18 +28,18 @@ variable "tf_backend_s3_bucket_aws_region"{
 }
 
 variable "tf_backend_s3_bucket_name"{
-  default = "abc-s3-bucket"
+  default = "aws-fsf-team-terraform-state-storage"
   # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
 }
 
 
 variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "abc-transit-gateway-s3-prefix-n-key"
+  default = "aws-fsf-terraform-network-state/transit-gateway/terraform.tfstate"
   # The S3 key or prefix+key for the terraform state file
 }
 
 # ---------------------------------------------------------------------------------------------------------------
-# Shared Services State Persistence Configuration |
+# SHARED SERVICES VPC | Backend Configuration for use with Terraform Backend Data Source
 # ---------------------------------------------------------------------------------------------------------------
 # This Terraform Backend is configured for Amazon S3 by default; however, you can replace this default config
 # and replace it with yours.
@@ -50,13 +50,46 @@ variable "tf_shared_services_backend_s3_bucket_aws_region"{
 }
 
 variable "tf_shared_services_backend_s3_bucket_name"{
-  default = "abc-s3-bucket"
+  default = "aws-fsf-team-terraform-state-storage"
   # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
 }
 
 variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "abc-shared-services-prefix-n-key"
+  default = "aws-fsf-terraform-network-state/shared-services-vpc/account-number/PLEASE-ADD-YOUR-ACCOUNT-NUMBER-HERE/vpc/terraform.tfstate"
   # The S3 key or prefix+key for the terraform state file
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+#  SHARED SERVICES | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_shared_services_network_paving_components_backend_s3_bucket_aws_region"{
+  default = "EXAMPLE-us-east-2"  # "PLEAE ADD THE AWS-REGION-CODE WHERE YOUR BUCKET WITH THIS STATE DATA EXIST"
+}
+
+variable "tf_shared_services_network_paving_components_backend_s3_bucket_name"{
+  default = "EXAMPLE-aws-fsf-team-terraform-state-storage" # "PLEASE ADD YOUR-AWS-S3-BUCKET-NAME WHERE YOUR STATE DATA IS STORED"
+}
+
+variable "tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
+  # "PLEASE ADD YOUR-S3-PREFIX-PATH+KEY-FOR-THIS-ACCOUNT-NETWORK-PAVING-COMPONENTS-VPC-STATE-FILE IS STORED"
+  default = "EXAMPLE-aws-fsf-terraform-network-state/shared-services-vpc/account-number/PLEASE-ADD-YOUR-ACCOUNT-NUMBER-HERE/terraform.tfstate"
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+#  THIS ACCOUNT | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_this_account_network_paving_components_backend_s3_bucket_aws_region"{
+  default = "EXAMPLE-us-east-2" # "PLEAE ADD THE AWS-REGION-CODE WHERE YOUR BUCKET WITH THIS STATE DATA EXIST"
+}
+
+variable "tf_this_account_network_paving_components_backend_s3_bucket_name"{
+  default = "EXAMPLE-aws-fsf-team-terraform-state-storage" # "PLEASE ADD YOUR-AWS-S3-BUCKET-NAME WHERE YOUR STATE DATA IS STORED"
+}
+
+variable "tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
+  # "PLEASE ADD YOUR-S3-PREFIX-PATH+KEY-FOR-THIS-ACCOUNT-NETWORK-PAVING-COMPONENTS-VPC-STATE-FILE IS STORED"
+  default = "EXAMPLE-aws-fsf-terraform-network-state/spoke/account-number/PLEASE-ADD-YOUR-ACCOUNT-NUMBER-HERE/terraform.tfstate"
 }
 
 
@@ -67,11 +100,11 @@ variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
 variable "transit_gateway_association_instructions" {
   type = map(bool)
   default = {
-    create_transit_gateway_association                        = false   # true //Associates VPC with AWS Transit Gateway
-    access_shared_services_vpc                                = false   # true //Propagates VPC routes to Shared Services Route Table
-    perform_east_west_packet_inspection                       = false   # Specify true or false
-    allow_onprem_access_to_entire_vpc_cidr_range              = false   # Specify true or false
-    allow_onprem_access_to_externally_routable_vpc_cidr_range = false   # Specify true or false
+    create_transit_gateway_association                        = false   # Specify true or false | Associates VPC with AWS Transit Gateway
+    access_shared_services_vpc                                = false   # Specify true or false | Propagates VPC routes to Shared Services Route Table
+    perform_east_west_packet_inspection                       = false   # Specify true or false | Propagates VPC routes to Packet Inspection Route Table for North-South Packet Inspection
+    allow_onprem_access_to_entire_vpc_cidr_range              = false   # Specify true or false | Propagate Routes to On-premises Route Table
+    allow_onprem_access_to_externally_routable_vpc_cidr_range = false   # Specify true or false | Propagate Routes to On-premises Route Table
 
   }
 }
@@ -130,7 +163,7 @@ variable "endpoints" {
 variable "route53_acts" {
   type = map(bool)
   default = {
-    create_standalone_private_hosted_zone                                       = true  # Specify true or false
+    create_standalone_private_hosted_zone                                       = false  # Specify true or false
     create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
     associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
     associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
@@ -138,11 +171,6 @@ variable "route53_acts" {
     create_forwarding_rule_for_domain                                           = false # Specify true or false
     share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
   }
-}
-
-
-variable "vpc_env_type"{
-  default="fsf"
 }
 
 
@@ -213,6 +241,11 @@ variable "vpc_type_string" {
   }
 }
 
+variable "vpc_env_type"{
+  default="fsf"
+}
+
+
 
 # Decision to make associate with centralized Route53 Private Hosted Zone
 # ---------------------------------------------------------------------------------------------------------------
@@ -226,7 +259,7 @@ variable "is_centralize_interface_endpoints_available" {
 
 
 variable "attach_to_centralize_dns_solution"{
-  default= false # Specify true or false
+  default = false # Specify true or false
 }
 
 
@@ -508,6 +541,7 @@ variable "Application_ID" {
 variable "Application_Name" {
   description = "The name of the application. Max 10 characters. Allowed characters [0-9A-Za-z]."
   type = string
+  default = "please_add_this_info"
 }
 
 variable "Business_Unit" {

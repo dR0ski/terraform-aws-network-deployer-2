@@ -13,6 +13,9 @@ data "aws_organizations_organization" "my_aws_organization" {}
 # ---------------------------------------------------------------------------------------------------------------
 # Object that contains a list of key value pairs that forms the tags added to a VPC on creation
 # ---------------------------------------------------------------------------------------------------------------
+
+resource "random_uuid" "uuid_a" { }
+
 locals {
   default_tags = {
     Name                 = var.Application_Name
@@ -33,7 +36,7 @@ locals {
 
 
 resource "aws_cloudwatch_event_bus" "network_event_bus" {
-  name = "aws-fsf-network-operations-event-bus-${var.vpc_type}"
+  name = "aws-fsf-network-operations-event-bus-${random_uuid.uuid_a.result}"
   tags = local.default_tags
 }
 

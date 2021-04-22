@@ -24,6 +24,33 @@ data "terraform_remote_state" "transit_gateway_network" {
 }
 
 
+data "terraform_remote_state" "shared_services_network_paving_components" {
+  backend = "s3"
+  config = {
+    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+    bucket = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
+    # Please populate with the key name the terraform.tfstate file for your transit_gateway
+    key = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+    region = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
+  }
+}
+
+
+//data "terraform_remote_state" "this_account_network_paving_components" {
+//  backend = "s3"
+//  config = {
+//    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+//    bucket = var.tf_this_account_network_paving_components_backend_s3_bucket_name
+//    # Please populate with the key name the terraform.tfstate file for your transit_gateway
+//    key = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+//    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+//    region = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
+//  }
+//}
+
+
+
 # ---------------------------------------------------------------------------------------------------------------
 
 # Object that contains a list of key value pairs that forms the tags added to a VPC on creation
@@ -52,6 +79,7 @@ locals {
   tgw_prod_route_table                  = join("_", [local.region_name,"tgw_production_route_table_id"])
 }
 
+/*
 
 # ---------------------------------------------------------------------------------------------------------------
 # AWS Lambda Function | Triggered after networking events are written to the shared services eventBridge eventBus
@@ -110,6 +138,7 @@ module "fsf-shared-services-vpc-network-operations-eventbus" {
   Environment_Type                          = var.Environment_Type
 }
 
+*/
 
 # The Spoke VPC creation
 # ---------------------------------------------------------------------------------------------------------------
@@ -204,8 +233,9 @@ module "fsf-shared-services-vpc-transit-gateway-association" {
   transit_gateway_subnets_exist                     = module.fsf-shared-services-vpc-subnets.tgw_routable_enabled  # var.subnet_type.transit_gateway_subnet
   access_shared_services_vpc                        = var.transit_gateway_association_instructions.access_shared_services_vpc
   perform_east_west_packet_inspection               = var.transit_gateway_association_instructions.perform_east_west_packet_inspection
-  route53_association_lambda_fn_name                = module.fsf-shared-services-network-put-event-lambda-fn.network-ops-put-event-lambda-fn-name
-  eventbus_arn                                      = module.fsf-shared-services-vpc-network-operations-eventbus.eventbus_arn
+  route53_association_lambda_fn_name                = data.terraform_remote_state.shared_services_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-shared-services-network-put-event-lambda-fn.network-ops-put-event-lambda-fn-name
+  # EVENT BUS ARN FOR THE TGW ACCOUNT NETWORKING COMPONENTS.
+  eventbus_arn                                      = data.terraform_remote_state.shared_services_network_paving_components.outputs.vpc_network_operations_eventbus_arn # module.fsf-shared-services-vpc-network-operations-eventbus.eventbus_arn
 }
 
 
