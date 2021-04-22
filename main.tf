@@ -26,6 +26,39 @@ locals{
   pave-joint-name = join("_", ["fsf_network_paving", random_uuid.uuid_a.result])
 }
 
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Pave Account with Network Orchestration Components
+# ---------------------------------------------------------------------------------------------------------------
+//noinspection ConflictingProperties
+module "pave_account_with_network_orchestration_components" {
+  source = "./aws-financial-services-framework-account-paving-for-networking-components"
+  count = ((var.which_vpc_type_are_you_creating.pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration == true && var.which_vpc_type_are_you_creating.spoke_vpc ==false && var.which_vpc_type_are_you_creating.shared_services_vpc==false) ? 1:0)
+  providers = {
+    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
+  }
+
+  # ----------------------------------------------------------------------------------------------------
+  # VPC Type specifies the type of VPC being created. This is used in the EventBus and Lambda FNs
+  # ----------------------------------------------------------------------------------------------------
+  vpc_type                                  = var.vpc_env_type
+
+  # ----------------------------------------------------------------------------------------------------
+  # Tags
+  # ----------------------------------------------------------------------------------------------------
+  Application_ID                            = var.Application_ID
+  Application_Name                          = local.pave-joint-name
+  Business_Unit                             = var.Business_Unit
+  CostCenterCode                            = var.CostCenterCode
+  CreatedBy                                 = var.CreatedBy
+  Manager                                   = var.Manager
+  Environment_Type                          = var.Environment_Type
+
+
+}
+
+
 # ---------------------------------------------------------------------------------------------------------------
 # Creates Shared Services VPC
 # ---------------------------------------------------------------------------------------------------------------
@@ -34,7 +67,7 @@ module "shared_services_vpc" {
   source = "./aws-financial-services-framework-deploy-shared-services-vpc"
   count = ((var.which_vpc_type_are_you_creating.shared_services_vpc == true) ? 1:0)
   providers = {
-    aws = aws.paris # Please specify the provider that aligns with the AWS Region where your VPC should be hosted
+    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
   }
 
   # ----------------------------------------------------------------------------------------------------
@@ -76,6 +109,18 @@ module "shared_services_vpc" {
   tf_backend_s3_bucket_aws_region                 = var.tf_backend_s3_bucket_aws_region
   tf_backend_state_file_s3_prefixpath_n_key_name  = var.tf_backend_state_file_s3_prefixpath_n_key_name
   tf_backend_s3_bucket_name                       = var.tf_backend_s3_bucket_name
+
+
+  # ----------------------------------------------------------------------------------------------------
+  # Terraform Data Source Configuration to the Network Paving Components for this account
+  # ----------------------------------------------------------------------------------------------------
+  # The three below variables configure passes the AWS S3 information where the Shared Services Paving Components terraform state is hosted
+  # ----------------------------------------------------------------------------------------------------
+  tf_shared_services_network_paving_components_backend_s3_bucket_aws_region                = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
+  tf_shared_services_network_paving_components_backend_s3_bucket_name                      = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
+  tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+
+
 
   # ----------------------------------------------------------------------------------------------------
   # TGW Association
@@ -123,7 +168,7 @@ module "spoke_vpc" {
   source = "./aws-financial-services-framework-deploy-spoke-vpc"
   count = ((var.which_vpc_type_are_you_creating.spoke_vpc == true) ? 1:0)
   providers = {
-    aws = aws.paris-iam # Please specify the provider that aligns with the AWS Region where your VPC should be hosted
+    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
   }
 
   # ----------------------------------------------------------------------------------------------------
@@ -173,6 +218,26 @@ module "spoke_vpc" {
   tf_shared_services_backend_s3_bucket_aws_region                = var.tf_shared_services_backend_s3_bucket_aws_region
   tf_shared_services_backend_s3_bucket_name                      = var.tf_shared_services_backend_s3_bucket_name
   tf_shared_services_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_backend_state_file_s3_prefixpath_n_key_name
+
+  # ----------------------------------------------------------------------------------------------------
+  # Terraform Data Source Configuration to the Network Paving Components for Shared Services Account
+  # ----------------------------------------------------------------------------------------------------
+  # The three below variables configure passes the AWS S3 information where the Shared Services Paving Components terraform state is hosted
+  # ----------------------------------------------------------------------------------------------------
+  tf_shared_services_network_paving_components_backend_s3_bucket_aws_region                = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
+  tf_shared_services_network_paving_components_backend_s3_bucket_name                      = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
+  tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+
+  # ----------------------------------------------------------------------------------------------------
+  # Terraform Data Source Configuration to the Network Paving Components for This Account
+  # ----------------------------------------------------------------------------------------------------
+  # The three below variables configure passes the AWS S3 information where This Account Paving Components terraform state is hosted
+  # ----------------------------------------------------------------------------------------------------
+  tf_this_account_network_paving_components_backend_s3_bucket_aws_region                = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
+  tf_this_account_network_paving_components_backend_s3_bucket_name                      = var.tf_this_account_network_paving_components_backend_s3_bucket_name
+  tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+
+
 
   # ----------------------------------------------------------------------------------------------------
   # TGW Association (Backend Data Source Configuration)

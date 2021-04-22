@@ -1,9 +1,0 @@
-environment_type            = "UAT"
-instance_tenancy            = "default"
-dns_support                 = true
-dns_host_names              = true
-vpc_cidr_block              = "100.64.0.0/16"
-enable_aws_ipv6_cidr_block  = false
-aws_region                  = "eu-west-3"
-on_premises_cidrs           = ["172.16.0.0/12", "10.0.0.0/8", "192.168.0.0/16"]
-enable_vpc_flow_logs        = true

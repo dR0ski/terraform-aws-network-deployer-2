@@ -1,8 +1,0 @@
-CODE_OF_CONDUCT.md:4
-CONTRIBUTING.md:50
-main.tf:28
-main.tf:32
-.github/workflows/pipeline.yml
-tests/unit/iam_role_webserver_test.go
-README.md:67
-examples/README.md:67

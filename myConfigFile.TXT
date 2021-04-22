@@ -1,0 +1,85 @@
+
+# ---------------------------------------------------------------------------------------------------------------
+#  AWS TRANSIT GATEWAY | Terraform Backend Configuration for use with Terraform Backend Data Source
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_backend_s3_bucket_aws_region"{
+  default = "us-east-2"
+  # Please fill in the aws S3 region where the bucket is being hosted
+}
+
+variable "tf_backend_s3_bucket_name"{
+  default = "aws-fsf-team-terraform-state-storage"
+  # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
+}
+
+
+variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "aws-fsf-terraform-network-state/transit-gateway/terraform.tfstate"
+  # The S3 key or prefix+key for the terraform state file
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# SHARED SERVICES VPC | Backend Configuration for use with Terraform Backend Data Source
+# ---------------------------------------------------------------------------------------------------------------
+# This Terraform Backend is configured for Amazon S3 by default; however, you can replace this default config
+# and replace it with yours.
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_shared_services_backend_s3_bucket_aws_region"{
+  default = "us-east-2"
+  # Please fill in the aws S3 region where the bucket is being hosted
+}
+
+variable "tf_shared_services_backend_s3_bucket_name"{
+  default = "aws-fsf-team-terraform-state-storage"
+  # Please fill in the aws S3 bucket name that you are using to store terraform state for your shared services
+}
+
+variable "tf_shared_services_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "aws-fsf-terraform-network-state/shared-services-vpc/account-number/900095077793/vpc/terraform.tfstate"
+  # The S3 key or prefix+key for the terraform state file
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+#  SHARED SERVICES | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_shared_services_network_paving_components_backend_s3_bucket_aws_region"{
+  default = "us-east-2"
+}
+
+variable "tf_shared_services_network_paving_components_backend_s3_bucket_name"{
+  default = "aws-fsf-team-terraform-state-storage"
+}
+
+variable "tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "aws-fsf-terraform-network-state/shared-services-vpc/account-number/900095077793/terraform.tfstate"
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+#  THIS ACCOUNT | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
+# ---------------------------------------------------------------------------------------------------------------
+variable "tf_this_account_network_paving_components_backend_s3_bucket_aws_region"{
+  default = "us-east-2" # "AWS-REGION-CODE"
+}
+
+variable "tf_this_account_network_paving_components_backend_s3_bucket_name"{
+  default = "aws-fsf-team-terraform-state-storage" # "YOUR-AWS-S3-BUCKET-NAME"
+}
+
+variable "tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "aws-fsf-terraform-network-state/spoke/account-number/206424390712/terraform.tfstate" # "YOUR-S3-PREFIX-PATH+KEY-FOR-THIS-ACCOUNT-NETWORK-PAVING-COMPONENTS-VPC-STATE-FILE"
+}
+
+
+
+
+
+
+
+# PARIS : eu-west-3
+provider "aws" {
+  region = "eu-west-3"
+  alias = "paris-iam"
+  access_key = "AKIATAD62HQ4HTAH7ZLT"
+  secret_key = "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"
+}

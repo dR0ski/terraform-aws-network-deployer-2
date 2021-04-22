@@ -46,6 +46,40 @@ variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
   default = "YOUR-S3-PREFIX-PATH+KEY-FOR-YOUR-TRANSIT-GATEWAY-STATE-FILE"
 }
 
+# ---------------------------------------------------------------------------------------------------------------
+#  SHARED SERVICES | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
+# ---------------------------------------------------------------------------------------------------------------
+
+variable "tf_shared_services_network_paving_components_backend_s3_bucket_aws_region"{
+  default = "AWS-REGION-CODE"
+}
+
+variable "tf_shared_services_network_paving_components_backend_s3_bucket_name"{
+  default = "YOUR-AWS-S3-BUCKET-NAME"
+}
+
+variable "tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-YOUR-NETWORK-PAVING-COMPONENTS-VPC-STATE-FILE"
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+#  THIS ACCOUNT | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
+# ---------------------------------------------------------------------------------------------------------------
+
+variable "tf_this_account_network_paving_components_backend_s3_bucket_aws_region"{
+  default = "AWS-REGION-CODE"
+}
+
+variable "tf_this_account_network_paving_components_backend_s3_bucket_name"{
+  default = "YOUR-AWS-S3-BUCKET-NAME"
+}
+
+variable "tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
+  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-THIS-ACCOUNT-NETWORK-PAVING-COMPONENTS-VPC-STATE-FILE"
+}
+
+
 
 # ---------------------------------------------------------------------------------------------------------------
 #  Controls Resource Deployment for VPC TYPES
