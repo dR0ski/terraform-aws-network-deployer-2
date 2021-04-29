@@ -119,15 +119,6 @@ provider "aws" {
   alias = "paris"
 }
 
-# PARIS : eu-west-3
-provider "aws" {
-  region = "eu-west-3"
-  alias = "paris-iam"
-  access_key = "AKIATAD62HQ4HTAH7ZLT"
-  secret_key = "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"
-}
-
-
 
 # STOCKHOLM : eu-north-1
 provider "aws" {

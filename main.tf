@@ -173,7 +173,7 @@ module "spoke_vpc" {
   source = "./aws-financial-services-framework-deploy-spoke-vpc"
   count = ((var.which_vpc_type_are_you_creating.spoke_vpc == true) ? 1:0)
   providers = {
-    aws = aws.paris-iam # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
+    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
   }
 
   # ----------------------------------------------------------------------------------------------------

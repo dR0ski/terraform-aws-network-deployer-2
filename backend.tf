@@ -1,13 +1,12 @@
 terraform{
   backend "s3"{
     # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
-    bucket = "aws-fsf-team-terraform-state-storage" # aws S3 bucket
+    bucket = "PLEASE-ADD-AWS-BUCKET-NAME"
+
     # Please populate with the key name the terraform.tfstate file for your transit_gateway
-    key =  "aws-fsf-terraform-network-state/spoke/account-number/206424390712/vpc/terraform.tfstate" # S3 key
+    key =  "PLEASE-ADD-S3-PREFIX-PATH/KEY-NAME"
+
     # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
-    region = "us-east-2" # aws region where your S3 bucket is located
+    region = "PLEASE-ADD-AWS-REGION (example us-east-2)"
   }
 }
-
-
-
