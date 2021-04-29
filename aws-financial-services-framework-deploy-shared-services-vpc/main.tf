@@ -12,6 +12,7 @@ If you dont have a back then please comment out this data source block.
 */
 
 data "terraform_remote_state" "transit_gateway_network" {
+  count = var.transit_gateway_association_instructions.create_transit_gateway_association==true  ? 1:0
   backend = "s3"
   config = {
     # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
@@ -37,19 +38,6 @@ data "terraform_remote_state" "shared_services_network_paving_components" {
 }
 
 
-//data "terraform_remote_state" "this_account_network_paving_components" {
-//  backend = "s3"
-//  config = {
-//    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
-//    bucket = var.tf_this_account_network_paving_components_backend_s3_bucket_name
-//    # Please populate with the key name the terraform.tfstate file for your transit_gateway
-//    key = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-//    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
-//    region = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
-//  }
-//}
-
-
 
 # ---------------------------------------------------------------------------------------------------------------
 
@@ -70,7 +58,7 @@ locals {
 
 
 locals {
-  region_name                           = lookup(var.aws_region_names, var.aws_region, "aws region nopt found")
+  region_name                           = lookup(var.aws_region_names, var.aws_region, "aws region not found")
   tgw_id                                = join("_", [local.region_name, "transit_gateway_id"])
   tgw_dev_route_table                   = join("_", [local.region_name,"tgw_development_route_table_id"])
   tgw_uat_route_table                   = join("_", [local.region_name,"tgw_uat_route_table_id"])
@@ -79,66 +67,6 @@ locals {
   tgw_prod_route_table                  = join("_", [local.region_name,"tgw_production_route_table_id"])
 }
 
-/*
-
-# ---------------------------------------------------------------------------------------------------------------
-# AWS Lambda Function | Triggered after networking events are written to the shared services eventBridge eventBus
-# ---------------------------------------------------------------------------------------------------------------
-module "fsf-shared-services-vpc-network-operations-lambda-fn" {
-  source  = "../aws-financial-services-network-ops-lambda-fn"
-  vpc_type =  var.vpc_env_type
-  # Tags
-  # -------
-  Application_ID                            = var.Application_ID
-  Application_Name                          = var.Application_Name
-  Business_Unit                             = var.Business_Unit
-  CostCenterCode                            = var.CostCenterCode
-  CreatedBy                                 = var.CreatedBy
-  Manager                                   = var.Manager
-  Environment_Type                          = var.Environment_Type
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
-# AWS Lambda Function | Puts Networking Events on the shared services AWS EventBridge EventBus
-# ---------------------------------------------------------------------------------------------------------------
-module "fsf-shared-services-network-put-event-lambda-fn" {
-  source  = "../aws-financial-services-network-ops-put-event-lambda-fn"
-  depends_on = [module.fsf-shared-services-vpc-network-operations-lambda-fn]
-  # Tags
-  # -------
-  Application_ID                            = var.Application_ID
-  Application_Name                          = var.Application_Name
-  Business_Unit                             = var.Business_Unit
-  CostCenterCode                            = var.CostCenterCode
-  CreatedBy                                 = var.CreatedBy
-  Manager                                   = var.Manager
-  Environment_Type                          = var.Environment_Type
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
-# AWS EventBridge EventBus | Networking EventBridge EventBus | All networking events are written here
-# ---------------------------------------------------------------------------------------------------------------
-module "fsf-shared-services-vpc-network-operations-eventbus" {
-  source  = "../aws-financial-services-framework-eventbridge-network-bus"
-  depends_on = [module.fsf-shared-services-vpc-network-operations-lambda-fn]
-  vpc_type =  var.vpc_env_type
-  network-ops-lambda-fn-name = module.fsf-shared-services-vpc-network-operations-lambda-fn.network-ops-lambda-fn-name
-  network-ops-lambda-fn-arn = module.fsf-shared-services-vpc-network-operations-lambda-fn.network-ops-lambda-fn-arn
-  network-ops-lambda-fn-id = module.fsf-shared-services-vpc-network-operations-lambda-fn.network-ops-lambda-fn-id
-  # Tags
-  # -------
-  Application_ID                            = var.Application_ID
-  Application_Name                          = var.Application_Name
-  Business_Unit                             = var.Business_Unit
-  CostCenterCode                            = var.CostCenterCode
-  CreatedBy                                 = var.CreatedBy
-  Manager                                   = var.Manager
-  Environment_Type                          = var.Environment_Type
-}
-
-*/
 
 # The Spoke VPC creation
 # ---------------------------------------------------------------------------------------------------------------
@@ -222,12 +150,12 @@ module "fsf-shared-services-vpc-transit-gateway-association" {
   count = var.transit_gateway_association_instructions.create_transit_gateway_association==true  ? 1:0
   vpc_id                                            = module.fsf-shared-services-vpc.vpc_id
   environment_type                                  = var.Environment_Type
-  transit_gateway_id                                = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_id, "transit gateway ID not found")        #paris_transit_gateway_id
-  transit_gateway_dev_route_table_id                = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_dev_route_table, "transit gateway dev route table not found")
-  transit_gateway_uat_route_table_id                = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_uat_route_table, "transit gateway uat route table not found")
-  transit_gateway_shared_services_route_table_id    = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_shared_svc_route_table, "transit gateway shared services route table not found")
-  transit_gateway_packet_inspection_route_table_id  = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_packet_inspection_route_table, "transit gateway packet inspection route table not found")
-  transit_gateway_production_route_table_id         = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_prod_route_table, "transit gateway prod route table not found")
+  transit_gateway_id                                = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")        #paris_transit_gateway_id
+  transit_gateway_dev_route_table_id                = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_dev_route_table, "transit gateway dev route table not found")
+  transit_gateway_uat_route_table_id                = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_uat_route_table, "transit gateway uat route table not found")
+  transit_gateway_shared_services_route_table_id    = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_shared_svc_route_table, "transit gateway shared services route table not found")
+  transit_gateway_packet_inspection_route_table_id  = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_packet_inspection_route_table, "transit gateway packet inspection route table not found")
+  transit_gateway_production_route_table_id         = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_prod_route_table, "transit gateway prod route table not found")
   transit_gateway_subnets                           = module.fsf-shared-services-vpc-subnets.transit_gateway_subnets # "${aws_subnet.transit_gateway_attachment_subnet.*.id}"
   create_transit_gateway_association                = var.transit_gateway_association_instructions.create_transit_gateway_association
   transit_gateway_subnets_exist                     = module.fsf-shared-services-vpc-subnets.tgw_routable_enabled  # var.subnet_type.transit_gateway_subnet
@@ -244,11 +172,12 @@ module "fsf-shared-services-vpc-transit-gateway-association" {
 module "fsf-shared-services-vpc-add-route" {
   source                          = "../aws-financial-services-framework-add-routes"
   count = (var.transit_gateway_association_instructions.create_transit_gateway_association == true ? 1:0)
+  depends_on = [module.fsf-shared-services-vpc-subnets, module.fsf-shared-services-create-vpc-route-tables, module.fsf-shared-services-vpc-transit-gateway-association, module.fsf-shared-services-vpc-endpoints]
   aws_route_table_id              = module.fsf-shared-services-create-vpc-route-tables.aws_routable_routing_table_id
   external_route_table_id         = module.fsf-shared-services-create-vpc-route-tables.externally_routable_routing_table_id
   tgw_aws_route_destination       = var.tgw_aws_route_destination
   tgw_external_route_destination  = var.tgw_external_route_destination
-  tgw_nexthopinfra_id             = lookup(data.terraform_remote_state.transit_gateway_network.outputs, local.tgw_id, "transit gateway ID not found")     #ENTER TGW ID    : THIS COULD BE A MODULE REFERENCE OR MANUALLY ENTERED ID : IF CREATE TGW ROUTE IS TRUE
+  tgw_nexthopinfra_id             = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")     #ENTER TGW ID    : THIS COULD BE A MODULE REFERENCE OR MANUALLY ENTERED ID : IF CREATE TGW ROUTE IS TRUE
   route_table                     = var.route_table
   next_hop_infra                  = var.next_hop_infra
 }
