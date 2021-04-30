@@ -92,63 +92,7 @@ locals {
   tgw_packet_inspection_route_table     = join("_", [local.region_name,"tgw_packet_inspection_route_table_id"])
   tgw_prod_route_table                  = join("_", [local.region_name,"tgw_production_route_table_id"])
 }
-/*
 
-# ---------------------------------------------------------------------------------------------------------------
-# AWS Route 53 Private Hosted Zone Put Event
-# ---------------------------------------------------------------------------------------------------------------
-module "fsf-spoke-phz-put-event" {
-  source  = "../aws-financial-services-network-ops-put-event-lambda-fn"
-  depends_on = [module.fsf-spoke-vpc-network-operations-lambda-fn]
-  # Tags
-  # -------
-  Application_ID                            = var.Application_ID
-  Application_Name                          = var.Application_Name
-  Business_Unit                             = var.Business_Unit
-  CostCenterCode                            = var.CostCenterCode
-  CreatedBy                                 = var.CreatedBy
-  Manager                                   = var.Manager
-  Environment_Type                          = var.Environment_Type
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
-# AWS Route 53 Resolver Inbound Endpoint
-# ---------------------------------------------------------------------------------------------------------------
-module "fsf-spoke-vpc-network-operations-lambda-fn" {
-  source  = "../aws-financial-services-network-ops-lambda-fn"
-  vpc_type =  var.vpc_env_type
-  # Tags
-  # -------
-  Application_ID                            = var.Application_ID
-  Application_Name                          = var.Application_Name
-  Business_Unit                             = var.Business_Unit
-  CostCenterCode                            = var.CostCenterCode
-  CreatedBy                                 = var.CreatedBy
-  Manager                                   = var.Manager
-  Environment_Type                          = var.Environment_Type
-}
-
-# ---------------------------------------------------------------------------------------------------------------
-# AWS Route 53 Resolver Inbound Endpoint
-# ---------------------------------------------------------------------------------------------------------------
-module "fsf-spoke-vpc-network-operations-eventbus" {
-  source  = "../aws-financial-services-framework-eventbridge-network-bus"
-  vpc_type =  var.vpc_env_type
-  network-ops-lambda-fn-name = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-name
-  network-ops-lambda-fn-arn = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-arn
-  network-ops-lambda-fn-id = module.fsf-spoke-vpc-network-operations-lambda-fn.network-ops-lambda-fn-id
-  # Tags
-  # -------
-  Application_ID                            = var.Application_ID
-  Application_Name                          = var.Application_Name
-  Business_Unit                             = var.Business_Unit
-  CostCenterCode                            = var.CostCenterCode
-  CreatedBy                                 = var.CreatedBy
-  Manager                                   = var.Manager
-  Environment_Type                          = var.Environment_Type
-}
-*/
 
 # ---------------------------------------------------------------------------------------------------------------
 # The Spoke VPC creation
