@@ -23,12 +23,12 @@ locals {
 # ---------------------------------------------------------------------------------------------------------------
 # AWS SSM Parameter | Holds a dictionary of all resolver rules that has been created
 # ---------------------------------------------------------------------------------------------------------------
-resource "aws_ssm_parameter" "route53_resolver_rules" {
-  name  = "fsf_route53_resolver_rules_dict"
-  type  = "String"
-  value = "0"
-  tags = local.default_tags
-}
+//resource "aws_ssm_parameter" "route53_resolver_rules" {
+//  name  = "fsf_route53_resolver_rules_dict"
+//  type  = "String"
+//  value = "0"
+//  tags = local.default_tags
+//}
 
 # ---------------------------------------------------------------------------------------------------------------
 # Inbound Resolver Endpoint | Creates the ENIs for these endpoints

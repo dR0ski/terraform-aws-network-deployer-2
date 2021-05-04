@@ -97,6 +97,11 @@ module "shared_services_vpc" {
   on_premises_cidrs                     = var.on_premises_cidrs
 
   # ----------------------------------------------------------------------------------------------------
+  # Instructs the security group module on which preconfigured security groups to create
+  # ----------------------------------------------------------------------------------------------------
+  security_grp_traffic_pattern          = var.security_grp_traffic_pattern
+
+  # ----------------------------------------------------------------------------------------------------
   # AWS Region where VPC is to be created
   # ----------------------------------------------------------------------------------------------------
   aws_region                            = var.aws_region.paris
@@ -174,33 +179,38 @@ module "spoke_vpc" {
   # ----------------------------------------------------------------------------------------------------
   # CIDR Range to be used for creating your VPC
   # ----------------------------------------------------------------------------------------------------
-  vpc_cidr_block                                = "100.65.0.0/16"
+  vpc_cidr_block                                  = "100.65.0.0/16"
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnets that will host resources that can be accessed externally and that can initiate traffic to external entities.
   # At least 1 IP address must be present in this list for each subnet type being created.
   # ----------------------------------------------------------------------------------------------------
-  public_subnets                                = ["100.65.1.0/24", "100.65.2.0/24", "100.65.3.0/24"]
+  public_subnets                                  = ["100.65.1.0/24", "100.65.2.0/24", "100.65.3.0/24"]
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnet(s) for hosting private workloads
   # ----------------------------------------------------------------------------------------------------
-  private_subnets                               = ["100.65.4.0/24", "100.65.5.0/24", "100.65.6.0/24"]
+  private_subnets                                 = ["100.65.4.0/24", "100.65.5.0/24", "100.65.6.0/24"]
 
   # ----------------------------------------------------------------------------------------------------
   # Creates a subnet that will host your transit gateway attachment interfaces.
   # ----------------------------------------------------------------------------------------------------
-  transit_gateway_subnets                       = ["100.65.7.0/24", "100.65.8.0/24", "100.65.9.0/24"]
+  transit_gateway_subnets                         = ["100.65.7.0/24", "100.65.8.0/24", "100.65.9.0/24"]
 
   # ----------------------------------------------------------------------------------------------------
   # Passes a list of IP addresses for on-premises resource to the security group module for uses in rules
   # ----------------------------------------------------------------------------------------------------
-  on_premises_cidrs                     = var.on_premises_cidrs
+  on_premises_cidrs                               = var.on_premises_cidrs
+
+  # ----------------------------------------------------------------------------------------------------
+  # Instructs the security group module on which preconfigured security groups to create
+  # ----------------------------------------------------------------------------------------------------
+  security_grp_traffic_pattern                    = var.security_grp_traffic_pattern
 
   # ----------------------------------------------------------------------------------------------------
   # AWS Region where VPC is to be created
   # ----------------------------------------------------------------------------------------------------
-  aws_region                                    = var.aws_region.paris
+  aws_region                                      = var.aws_region.paris
 
   # ----------------------------------------------------------------------------------------------------
   # Passing the variables that configures the data source to the transit gateway backend
@@ -236,8 +246,6 @@ module "spoke_vpc" {
   tf_this_account_network_paving_components_backend_s3_bucket_aws_region                = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
   tf_this_account_network_paving_components_backend_s3_bucket_name                      = var.tf_this_account_network_paving_components_backend_s3_bucket_name
   tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-
-
 
   # ----------------------------------------------------------------------------------------------------
   # TGW Association (Backend Data Source Configuration)

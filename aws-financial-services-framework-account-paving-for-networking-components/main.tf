@@ -140,6 +140,22 @@ module "fsf-vpc-network-operations-eventbus" {
             ],
             "Effect": "Allow",
             "Sid": "AllowVPCManagementSpecificResources"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateTransitGatewayRoute",
+                "ec2:ReplaceTransitGatewayRoute"
+            ],
+            "Resource": "arn:aws:ec2:*:*:transit-gateway-attachment/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateTransitGatewayRoute",
+                "ec2:ReplaceTransitGatewayRoute"
+            ],
+            "Resource": "arn:aws:ec2:*:*:transit-gateway-route-table/*"
         }
     ]
 }

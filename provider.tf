@@ -119,6 +119,7 @@ provider "aws" {
   alias = "paris"
 }
 
+
 # STOCKHOLM : eu-north-1
 provider "aws" {
   region = "eu-north-1"
