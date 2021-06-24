@@ -33,14 +33,12 @@ resource "aws_vpc_endpoint" "s3_ep" {
 								"Effect": "Allow",
 								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
 								"Action": [
-									 "s3:ListAllMyBuckets", 
-									 "s3:ListBucket", 
-									 "s3:GetObject", 
-									 "s3:GetObjectVersion", 
+									 "s3:Get*",
+									 "s3:List*",
 									 "s3:PutObject"
 								],
 								"Resource": [
-									"arn:aws:s3:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*",
+									"arn:aws:s3::${data.aws_caller_identity.current.account_id}:*",
 									"arn:aws:s3:::packages.*.amazonaws.com/*",
 									"arn:aws:s3:::repo.*.amazonaws.com/*",
 									"arn:aws:s3:::patch-baseline-snapshot-${data.aws_caller_identity.current.account_id}:/*",
