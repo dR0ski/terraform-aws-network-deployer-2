@@ -1,6 +1,24 @@
-variable "aws_region"{
-//  default = "eu-west-3"
-}
+variable "aws_region"{default = ""} # eu-west-3
+
+variable "transit_gateway_id" {default = ""}
+  
+variable "transit_gateway_dev_route_table" {default = ""}
+
+variable "transit_gateway_uat_route_table" {default = ""}
+
+variable "transit_gateway_shared_svc_route_table" {default = ""}
+
+variable "transit_gateway_packet_inspection_route_table" {default = ""}
+
+variable "transit_gateway_prod_route_table" {default = ""}
+
+variable "shared_services_vpc_id" {default=""}
+
+variable "shared_services_network_operations_eventbus_arn" {default=""}
+
+variable "spoke-vpc-network-operations-put-event-lambda-fn-name" {default = ""}
+
+variable "spoke_vpc_network_operations_eventbus_arn" {default = ""}
 
 variable "vpc_env_type"{default="spoke"}
 

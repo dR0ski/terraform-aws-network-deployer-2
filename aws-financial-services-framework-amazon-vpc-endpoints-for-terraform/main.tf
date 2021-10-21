@@ -270,8 +270,26 @@ resource "aws_vpc_endpoint" "secretsmanager_endpoint" {
 									"secretsmanager:DescribeSecret",
 									"secretsmanager:GetRandomPassword",
 									"secretsmanager:GetSecretValue",
-									"secretsmanager:ListSecrets",
-									"secretsmanager:ListSecretVersionIds"
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:CancelRotateSecret",
+                                    "secretsmanager:CreateSecret",
+                                    "secretsmanager:DeleteResourcePolicy",
+                                    "secretsmanager:DeleteSecret",
+                                    "secretsmanager:GetRandomPassword",
+                                    "secretsmanager:GetResourcePolicy",
+                                    "secretsmanager:GetSecretValue",
+                                    "secretsmanager:ListSecrets",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:PutResourcePolicy",
+                                    "secretsmanager:PutSecretValue",
+                                    "secretsmanager:RemoveRegionsFromReplication",
+                                    "secretsmanager:ReplicateSecretToRegions",
+                                    "secretsmanager:RestoreSecret",
+                                    "secretsmanager:RotateSecret",
+                                    "secretsmanager:StopReplicationToReplica",
+                                    "secretsmanager:UpdateSecret",
+                                    "secretsmanager:UpdateSecretVersionStage"
 								],
 								"Resource": ["arn:aws:secretsmanager::${data.aws_caller_identity.current.account_id}:*"]
 						}]

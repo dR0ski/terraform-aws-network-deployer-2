@@ -1,6 +1,20 @@
-variable "aws_region"{
-//  default = "eu-west-3"
-}
+variable "aws_region"{ default = "" }//  eu-west-3
+
+variable "transit_gateway_id" {default = ""}
+
+variable "transit_gateway_dev_route_table" {default = ""}
+
+variable "transit_gateway_uat_route_table" {default = ""}
+
+variable "transit_gateway_shared_svc_route_table" {default = ""}
+
+variable "transit_gateway_packet_inspection_route_table" {default = ""}
+
+variable "transit_gateway_prod_route_table" {default = ""}
+
+variable "shared-services-vpc-network-operations-put-event-lambda-fn-name" {default = ""}
+
+variable "shared_services_network_operations_eventbus_arn" {default = ""}
 
 variable "vpc_env_type"{default="shared"}
 
@@ -23,60 +37,6 @@ variable "rule_type" {
     condition = can(regex("FORWARD|SYSTEM|RECURSIVE", var.rule_type))
     error_message = "Please enter a valid AWS Route 53 resolver rule type."
   }
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
-#  TRANSIT GATEWAY TERRAFORM BACKEND | -> Configuration Parameters
-# ---------------------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------
-#  TRANSIT GATEWAY BACKEND Configuration
-# ---------------------------------------------------------------------------------------------------------------
-
-variable "tf_backend_s3_bucket_aws_region"{
-  default = "AWS-REGION-CODE"
-}
-
-variable "tf_backend_s3_bucket_name"{
-  default = "YOUR-AWS-S3-BUCKET-NAME"
-}
-
-
-variable "tf_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-YOUR-TRANSIT-GATEWAY-STATE-FILE"
-}
-
-# ---------------------------------------------------------------------------------------------------------------
-#  SHARED SERVICES | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
-# ---------------------------------------------------------------------------------------------------------------
-
-variable "tf_shared_services_network_paving_components_backend_s3_bucket_aws_region"{
-  default = "AWS-REGION-CODE"
-}
-
-variable "tf_shared_services_network_paving_components_backend_s3_bucket_name"{
-  default = "YOUR-AWS-S3-BUCKET-NAME"
-}
-
-variable "tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-YOUR-NETWORK-PAVING-COMPONENTS-VPC-STATE-FILE"
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
-#  THIS ACCOUNT | NETWORK PAVING COMPONENTS TERRAFORM BACKEND | -> Configuration Parameters
-# ---------------------------------------------------------------------------------------------------------------
-
-variable "tf_this_account_network_paving_components_backend_s3_bucket_aws_region"{
-  default = "AWS-REGION-CODE"
-}
-
-variable "tf_this_account_network_paving_components_backend_s3_bucket_name"{
-  default = "YOUR-AWS-S3-BUCKET-NAME"
-}
-
-variable "tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name"{
-  default = "YOUR-S3-PREFIX-PATH+KEY-FOR-THIS-ACCOUNT-NETWORK-PAVING-COMPONENTS-VPC-STATE-FILE"
 }
 
 

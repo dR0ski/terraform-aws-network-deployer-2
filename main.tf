@@ -19,13 +19,12 @@ Please do the following before deploying this solution:
 resource "random_uuid" "uuid_a" { }
 
 locals{
-  shared-services-name = "fsf_shared_services"
-  spoke-name = "fsf_spoke_vpc"
-  shared-joint-name = join("_", [local.shared-services-name, random_uuid.uuid_a.result])
-  spoke-joint-name = join("_", [local.spoke-name, random_uuid.uuid_a.result])
-  pave-joint-name = join("_", ["fsf_network_paving", random_uuid.uuid_a.result])
+  shared-services-name     = "fsf_shared_services"
+  spoke-name               = "fsf_spoke_vpc"
+  shared-joint-name        = join("_", [local.shared-services-name, random_uuid.uuid_a.result])
+  spoke-joint-name         = join("_", [local.spoke-name, random_uuid.uuid_a.result])
+  pave-joint-name          = join("_", ["fsf_network_paving", random_uuid.uuid_a.result])
 }
-
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -54,8 +53,6 @@ module "pave_account_with_network_orchestration_components" {
   CreatedBy                                 = var.CreatedBy
   Manager                                   = var.Manager
   Environment_Type                          = var.Environment_Type
-
-
 }
 
 
@@ -107,27 +104,6 @@ module "shared_services_vpc" {
   aws_region                            = var.aws_region.paris
 
   # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to Access Transit Gateway State Info
-  # --------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where the TGW terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_backend_s3_bucket_aws_region                 = var.tf_backend_s3_bucket_aws_region
-  tf_backend_state_file_s3_prefixpath_n_key_name  = var.tf_backend_state_file_s3_prefixpath_n_key_name
-  tf_backend_s3_bucket_name                       = var.tf_backend_s3_bucket_name
-
-
-  # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to the Network Paving Components for this account
-  # ----------------------------------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where the Shared Services Paving Components terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_shared_services_network_paving_components_backend_s3_bucket_aws_region                = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
-  tf_shared_services_network_paving_components_backend_s3_bucket_name                      = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
-  tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-
-
-
-  # ----------------------------------------------------------------------------------------------------
   # TGW Association
   # ---------------
   # This boolean map provides instructions on whether this shared services VPC should be integrated with
@@ -136,6 +112,20 @@ module "shared_services_vpc" {
   # TGW route table configuration
   # ----------------------------------------------------------------------------------------------------
   transit_gateway_association_instructions  = var.transit_gateway_association_instructions
+
+  transit_gateway_id                                = var.transit_gateway_id
+  transit_gateway_dev_route_table                   = var.transit_gateway_dev_route_table
+  transit_gateway_uat_route_table                   = var.transit_gateway_uat_route_table
+  transit_gateway_shared_svc_route_table            = var.transit_gateway_shared_svc_route_table
+  transit_gateway_packet_inspection_route_table     = var.transit_gateway_shared_svc_route_table
+  transit_gateway_prod_route_table                  = var.transit_gateway_prod_route_table
+
+  # ----------------------------------------------------------------------------------------------------
+  # Network Paved Infrastructure
+  # ----------------------------------------------------------------------------------------------------
+  shared-services-vpc-network-operations-put-event-lambda-fn-name   = var.shared-services-vpc-network-operations-put-event-lambda-fn-name
+  shared_services_network_operations_eventbus_arn                   = var.shared_services_network_operations_eventbus_arn
+
 
   # Tags
   # -------
@@ -146,7 +136,6 @@ module "shared_services_vpc" {
   CreatedBy                                 = var.CreatedBy
   Manager                                   = var.Manager
   Environment_Type                          = "shared services"
-
 }
 
 /*
@@ -213,41 +202,6 @@ module "spoke_vpc" {
   aws_region                                      = var.aws_region.paris
 
   # ----------------------------------------------------------------------------------------------------
-  # Passing the variables that configures the data source to the transit gateway backend
-  # ----------------------------------------------------------------------------------------------------
-  tf_backend_s3_bucket_aws_region                 = var.tf_backend_s3_bucket_aws_region
-  tf_backend_state_file_s3_prefixpath_n_key_name  = var.tf_backend_state_file_s3_prefixpath_n_key_name
-  tf_backend_s3_bucket_name                       = var.tf_backend_s3_bucket_name
-
-  # ----------------------------------------------------------------------------------------------------
-  # Shared Services VPC Association (Backend Data Source Configuration)
-  # -----------------------------------------------------------------------
-  # If you have deployed the shared services VPC then configure the below three variables. This configuration
-  # allows the data source to pull the shared services state information via the backend that you configured.
-  # ----------------------------------------------------------------------------------------------------
-  tf_shared_services_backend_s3_bucket_aws_region                = var.tf_shared_services_backend_s3_bucket_aws_region
-  tf_shared_services_backend_s3_bucket_name                      = var.tf_shared_services_backend_s3_bucket_name
-  tf_shared_services_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_backend_state_file_s3_prefixpath_n_key_name
-
-  # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to the Network Paving Components for Shared Services Account
-  # ----------------------------------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where the Shared Services Paving Components terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_shared_services_network_paving_components_backend_s3_bucket_aws_region                = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
-  tf_shared_services_network_paving_components_backend_s3_bucket_name                      = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
-  tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-
-  # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to the Network Paving Components for This Account
-  # ----------------------------------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where This Account Paving Components terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_this_account_network_paving_components_backend_s3_bucket_aws_region                = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
-  tf_this_account_network_paving_components_backend_s3_bucket_name                      = var.tf_this_account_network_paving_components_backend_s3_bucket_name
-  tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-
-  # ----------------------------------------------------------------------------------------------------
   # TGW Association (Backend Data Source Configuration)
   # -------------------------------------------------------
   # This boolean map provides instructions on whether this spoke VPC should be integrated with
@@ -255,16 +209,32 @@ module "spoke_vpc" {
   # If an integration should take place then the instruction allows for attachment and
   # TGW route table configuration
   # ----------------------------------------------------------------------------------------------------
-  transit_gateway_association_instructions      = var.transit_gateway_association_instructions
+  transit_gateway_association_instructions          = var.transit_gateway_association_instructions
+
+  transit_gateway_id                                = var.transit_gateway_id
+  transit_gateway_dev_route_table                   = var.transit_gateway_dev_route_table
+  transit_gateway_uat_route_table                   = var.transit_gateway_uat_route_table
+  transit_gateway_shared_svc_route_table            = var.transit_gateway_shared_svc_route_table
+  transit_gateway_packet_inspection_route_table     = var.transit_gateway_shared_svc_route_table
+  transit_gateway_prod_route_table                  = var.transit_gateway_prod_route_table
+
+  # ----------------------------------------------------------------------------------------------------
+  # Network Paved Infrastructure
+  # ----------------------------------------------------------------------------------------------------
+  shared_services_vpc_id                                   = var.shared_services_vpc_id
+  shared_services_network_operations_eventbus_arn          = var.shared_services_network_operations_eventbus_arn
+  spoke-vpc-network-operations-put-event-lambda-fn-name    = var.spoke-vpc-network-operations-put-event-lambda-fn-name
+  spoke_vpc_network_operations_eventbus_arn                = var.spoke_vpc_network_operations_eventbus_arn
+
 
   # ----------------------------------------------------------------------------------------------------
   # VPC Endpoints
-  # ---------------------
+  # ----------------------------------------------------------------------------------------------------
   # VPC Endpoints are an integral part of the VPC experience. The below endpoint specification
   # Passes a boolean map with the endpoints to be configure. By default on the Gateway Endpoints are
   # enabled for spoke VPCs
   # ----------------------------------------------------------------------------------------------------
-  endpoints                                     = var.endpoints
+  endpoints                                       = var.endpoints
 
   # ----------------------------------------------------------------------------------------------------
   # Integrating with Centralized VPC Endpoints (If Available)
