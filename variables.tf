@@ -13,8 +13,8 @@
 variable "which_vpc_type_are_you_creating" {
   type = map(bool)
   default = {
-    shared_services_vpc     = false    # Specify true or false
-    spoke_vpc               = true    # Specify true or false
+    shared_services_vpc     = false                                                   # Specify true or false
+    spoke_vpc               = false                                                   # Specify true or false
     pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or false
   }
 }
@@ -320,7 +320,7 @@ variable "custom_domain_name" {
 
 
 variable "domain_name_servers" {
-  default = ["127.0.0.1", "10.0.0.2"]
+  default = ["127.0.0.1"]
 }
 
 variable "ntp_servers" {
@@ -337,6 +337,11 @@ variable "netbios_node_type" {
   default = 2
 }
 
+
+variable "private_hosted_zone_name"{
+  type = list(string)
+  default =  ["anaconda.aws-fsf-corp.com"]
+}
 
 # ---------------------------------------------------------------------------------------------------------------
 ########################################### SUBNET MODULE VARIABLES #############################################
@@ -362,11 +367,7 @@ variable "subnet_type" {
 # Map of port and security group attributes required for the creations of the Amazon VPC Security Group
 # ---------------------------------------------------------------------------------------------------------------
 variable "private_subnets" {
-  default = [
-    "100.64.1.0/24",
-    "100.64.2.0/24",
-    "100.64.3.0/24"
-  ]
+  default = ["127.0.0.1"]
 }
 
 
@@ -374,11 +375,7 @@ variable "private_subnets" {
 # Map of port and security group attributes required for the creations of the Amazon VPC Security Group
 # ---------------------------------------------------------------------------------------------------------------
 variable "public_subnets" {
-  default = [
-    "100.64.8.0/24",
-    "100.64.9.0/24",
-    "100.64.10.0/24"
-  ]
+  default = ["127.0.0.1"]
 }
 
 
@@ -386,11 +383,7 @@ variable "public_subnets" {
 # Transit Gateway Attachment Subnet
 # ---------------------------------------------------------------------------------------------------------------
 variable "transit_gateway_subnets" {
-  default = [
-    "100.64.0.0/28",
-    "100.64.0.16/28",
-    "100.64.0.32/28"
-  ]
+  default = ["127.0.0.1"]
 }
 
 

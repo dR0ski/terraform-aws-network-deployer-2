@@ -20,10 +20,10 @@ data "aws_caller_identity" "current" {}
 //}
 
 
-# VPC Endpoints 
+# VPC Endpoints
 # ---------------------------------------------------------------------------------------------------------------
 
-# S3 VPC Endpoint 
+# S3 VPC Endpoint
 resource "aws_vpc_endpoint" "s3_ep" {
 	vpc_id        = var.vpc_id
 	service_name  = "com.amazonaws.${var.aws_region}.s3"
@@ -33,11 +33,19 @@ resource "aws_vpc_endpoint" "s3_ep" {
 								"Effect": "Allow",
 								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
 								"Action": [
-									 "s3:*"
+									 "s3:Get*",
+									 "s3:List*",
+									 "s3:PutObject"
 								],
-								"Resource": "*"
+								"Resource": [
+									"arn:aws:s3::${data.aws_caller_identity.current.account_id}:*",
+									"arn:aws:s3:::packages.*.amazonaws.com/*",
+									"arn:aws:s3:::repo.*.amazonaws.com/*",
+									"arn:aws:s3:::patch-baseline-snapshot-${data.aws_caller_identity.current.account_id}:/*",
+									"arn:aws:s3:::aws-ssm-${var.aws_region}/*"
+								]
 						}]
-	 
+
 		}
 		POLICY
 	count        = var.endpoints.s3_gateway == true ? 1 : 0
@@ -45,7 +53,7 @@ resource "aws_vpc_endpoint" "s3_ep" {
 		Name = "spokeVPC_s3"
 		Environment = var.environment_type
 	}
-	
+
 }
 
 
@@ -57,12 +65,12 @@ resource "aws_vpc_endpoint_route_table_association" "s3_ep_association" {
   count = var.endpoints.s3_gateway == true ? 1:0
   route_table_id  = var.route_table_id
   vpc_endpoint_id = aws_vpc_endpoint.s3_ep[0].id
-  
+
 }
 #-----------------------------------------------------------------------------------------------------------------
 
 
-# DynamoDB VPC Endpoint 
+# DynamoDB VPC Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "dynamodb_ep" {
 	vpc_id        = var.vpc_id
@@ -72,10 +80,15 @@ resource "aws_vpc_endpoint" "dynamodb_ep" {
 		 "Statement": [{
 								"Effect": "Allow",
 								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["dynamodb:*"],
-								"Resource": "*"
+								"Action": [
+										"dynamodb:GetItem",
+										"dynamodb:PutItem",
+										"dynamodb:Scan",
+										"dynamodb:Query"
+								],
+								"Resource": ["arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/*/index/*"]
 						}]
-	 
+
 		}
 		POLICY
 	count        = var.endpoints.dynamodb == true ? 1 : 0
@@ -86,9 +99,9 @@ resource "aws_vpc_endpoint" "dynamodb_ep" {
 }
 
 #-----------------------------------------------------------------------------------------------------------------
-# VPC DynamoDB Endpoint Route Table Association 
+# VPC DynamoDB Endpoint Route Table Association
 #-----------------------------------------------------------------------------------------------------------------
-resource "aws_vpc_endpoint_route_table_association" "dynamodb_ep_association" { 
+resource "aws_vpc_endpoint_route_table_association" "dynamodb_ep_association" {
 	depends_on 	  = [aws_vpc_endpoint.dynamodb_ep]
 	count = var.endpoints.dynamodb == true ? 1 : 0
 	route_table_id  = var.route_table_id
@@ -112,7 +125,34 @@ resource "aws_vpc_endpoint" "ec2_endpoint" {
 					"Effect": "Allow",
 					"Principal":{"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
 					"Resource": "*"
+			},
+			{
+					"Action": [
+							"ec2:CreateVolume"
+					],
+					"Effect": "Deny",
+					"Principal":{"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
+					"Resource": "*",
+					"Condition": {
+							"Bool": {
+									"ec2:Encrypted": "false"
+							}
+					}
+			},
+			{
+					"Action": [
+							"ec2:RunInstances"
+					],
+					"Effect": "Deny",
+					"Principal":{"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
+					"Resource": "*",
+					"Condition": {
+							"Bool": {
+									"ec2:Encrypted": "false"
+							}
+					}
 			}]
+
 		}
 		POLICY
 	count        = var.endpoints.ec2 == true ? 1 : 0
@@ -164,7 +204,7 @@ resource "aws_vpc_endpoint" "ssmmessages_endpoint" {
 	count        = var.endpoints.ssm_messages == true ? 1 : 0
 	tags = {
 		Name = "spokeVPC_ssm_messages"
-		Environment = var.environment_type 
+		Environment = var.environment_type
 	}
 }
 
@@ -189,7 +229,7 @@ resource "aws_vpc_endpoint" "ssm_endpoint" {
 	}
 }
 
-# KMS Endpoint 
+# KMS Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "kms_endpoint" {
 	vpc_id            = var.vpc_id
@@ -209,7 +249,7 @@ resource "aws_vpc_endpoint" "kms_endpoint" {
 	}
 }
 
-# Secrets Manager Endpoint 
+# Secrets Manager Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "secretsmanager_endpoint" {
 	vpc_id        = var.vpc_id
@@ -226,10 +266,34 @@ resource "aws_vpc_endpoint" "secretsmanager_endpoint" {
 		 "Statement": [{
 								"Effect": "Allow",
 								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["secretsmanager:*"],
-								"Resource": "*"
+								"Action": [
+									"secretsmanager:DescribeSecret",
+									"secretsmanager:GetRandomPassword",
+									"secretsmanager:GetSecretValue",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:CancelRotateSecret",
+                                    "secretsmanager:CreateSecret",
+                                    "secretsmanager:DeleteResourcePolicy",
+                                    "secretsmanager:DeleteSecret",
+                                    "secretsmanager:GetRandomPassword",
+                                    "secretsmanager:GetResourcePolicy",
+                                    "secretsmanager:GetSecretValue",
+                                    "secretsmanager:ListSecrets",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:PutResourcePolicy",
+                                    "secretsmanager:PutSecretValue",
+                                    "secretsmanager:RemoveRegionsFromReplication",
+                                    "secretsmanager:ReplicateSecretToRegions",
+                                    "secretsmanager:RestoreSecret",
+                                    "secretsmanager:RotateSecret",
+                                    "secretsmanager:StopReplicationToReplica",
+                                    "secretsmanager:UpdateSecret",
+                                    "secretsmanager:UpdateSecretVersionStage"
+								],
+								"Resource": ["arn:aws:secretsmanager::${data.aws_caller_identity.current.account_id}:*"]
 						}]
-	 
+
 		}
 		POLICY
 	count        = var.endpoints.secrets_manager == true ? 1 : 0
@@ -240,7 +304,7 @@ resource "aws_vpc_endpoint" "secretsmanager_endpoint" {
 }
 
 
-# ECS Endpoint 
+# ECS Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ecs_endpoint" {
 	vpc_id        = var.vpc_id
@@ -259,7 +323,7 @@ resource "aws_vpc_endpoint" "ecs_endpoint" {
 	}
 }
 
-# ECS Agent Endpoint 
+# ECS Agent Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ecs_agent_endpoint" {
 	vpc_id        = var.vpc_id
@@ -298,7 +362,7 @@ resource "aws_vpc_endpoint" "ecs_telemetry_endpoint" {
 }
 
 
-# SNS Endpoint 
+# SNS Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "sns_endpoint" {
 	vpc_id        = var.vpc_id
@@ -311,10 +375,15 @@ resource "aws_vpc_endpoint" "sns_endpoint" {
 		 "Statement": [{
 								"Effect": "Allow",
 								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["sns:*"],
-								"Resource": "*"
+								"Action": [
+									"sns:Subscribe",
+									"sns:Unsubscribe",
+									"sns:Publish",
+									"sns:ListTopics"
+								],
+								"Resource": ["arn:aws:sns:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"]
 						}]
-	 
+
 		}
 		POLICY
 	count        = var.endpoints.sns == true ? 1 : 0
@@ -328,7 +397,7 @@ resource "aws_vpc_endpoint" "sns_endpoint" {
 	}
 }
 
-# SQS Endpoint 
+# SQS Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "sqs_endpoint" {
 	vpc_id        = var.vpc_id
@@ -345,10 +414,21 @@ resource "aws_vpc_endpoint" "sqs_endpoint" {
 		 "Statement": [{
 								"Effect": "Allow",
 								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["sqs:*"],
-								"Resource": "*"
+								"Action": [
+									"sqs:ListQueues",
+									"sqs:ListQueueTags",
+									"sqs:ReceiveMessage",
+									"sqs:SendMessageBatch",
+									"sqs:SendMessage",
+									"sqs:GetQueueUrl",
+									"sqs:GetQueueAttributes",
+									"sqs:DeleteMessage",
+									"sqs:ChangeMessageVisibility",
+									"sqs:ChangeMessageVisibilityBatch"
+								],
+								"Resource": ["arn:aws:sqs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"]
 						}]
-	 
+
 		}
 		POLICY
 	count        = var.endpoints.sqs == true ? 1 : 0
@@ -365,7 +445,7 @@ resource "aws_vpc_endpoint" "sts_endpoint" {
 	service_name  = "com.amazonaws.${var.aws_region}.sts"
 	vpc_endpoint_type = "Interface"
 	subnet_ids = var.endpoint_subnet_ids
-	
+
 	security_group_ids = [
 		var.endpoint_security_group,
 	]
@@ -378,7 +458,7 @@ resource "aws_vpc_endpoint" "sts_endpoint" {
 								"Action": "*",
 								"Resource": ["arn:aws:sts::${data.aws_caller_identity.current.account_id}:*"]
 						}]
-	 
+
 		}
 		POLICY
 	count        = var.endpoints.sts == true ? 1 : 0

@@ -70,23 +70,23 @@ module "shared_services_vpc" {
   # ----------------------------------------------------------------------------------------------------
   # CIDR Range to be used for creating your VPC
   # ----------------------------------------------------------------------------------------------------
-  vpc_cidr_block                        = "100.64.0.0/16"
+  vpc_cidr_block                        = var.vpc_cidr_block
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnets that will host your public resources like NAT Gateways, public facing load balancers.
   # At least 1 IP address must be present in this list for each subnet type being created.
   # ----------------------------------------------------------------------------------------------------
-  public_subnets                        = ["100.64.1.0/24", "100.64.2.0/24", "100.64.3.0/24"]
+  public_subnets                        = var.public_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnet(s) for hosting private workloads
   # ----------------------------------------------------------------------------------------------------
-  private_subnets                       = ["100.64.4.0/24", "100.64.5.0/24", "100.64.6.0/24"]
+  private_subnets                       = var.private_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates a subnet that will host your transit gateway attachment interfaces.
   # ----------------------------------------------------------------------------------------------------
-  transit_gateway_subnets               = ["100.64.7.0/24", "100.64.8.0/24", "100.64.9.0/24"]
+  transit_gateway_subnets               = var.transit_gateway_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Passes a list of IP addresses for on-premises resource to the security group module for uses in rules
@@ -135,7 +135,7 @@ module "shared_services_vpc" {
   CostCenterCode                            = var.CostCenterCode
   CreatedBy                                 = var.CreatedBy
   Manager                                   = var.Manager
-  Environment_Type                          = "shared services"
+  Environment_Type                          = var.Environment_Type
 }
 
 /*
@@ -168,23 +168,23 @@ module "spoke_vpc" {
   # ----------------------------------------------------------------------------------------------------
   # CIDR Range to be used for creating your VPC
   # ----------------------------------------------------------------------------------------------------
-  vpc_cidr_block                                  = "100.65.0.0/16"
+  vpc_cidr_block                                  = var.vpc_cidr_block
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnets that will host resources that can be accessed externally and that can initiate traffic to external entities.
   # At least 1 IP address must be present in this list for each subnet type being created.
   # ----------------------------------------------------------------------------------------------------
-  public_subnets                                  = ["100.65.1.0/24", "100.65.2.0/24", "100.65.3.0/24"]
+  public_subnets                                  = var.public_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnet(s) for hosting private workloads
   # ----------------------------------------------------------------------------------------------------
-  private_subnets                                 = ["100.65.4.0/24", "100.65.5.0/24", "100.65.6.0/24"]
+  private_subnets                                 = var.private_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates a subnet that will host your transit gateway attachment interfaces.
   # ----------------------------------------------------------------------------------------------------
-  transit_gateway_subnets                         = ["100.65.7.0/24", "100.65.8.0/24", "100.65.9.0/24"]
+  transit_gateway_subnets                         = var.transit_gateway_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Passes a list of IP addresses for on-premises resource to the security group module for uses in rules
@@ -266,7 +266,7 @@ module "spoke_vpc" {
   # ----------------------------------------------------------------------------------------------------
   route53_acts                                  = var.route53_acts
   rule_type                                     = var.rule_type
-  private_hosted_zone_name                      = ["anaconda.aws-fsf-corp.com"]
+  private_hosted_zone_name                      = var.private_hosted_zone_name
 
   # Tags
   # -------
