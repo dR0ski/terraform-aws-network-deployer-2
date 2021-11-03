@@ -21,9 +21,9 @@ output "shared_services_transit_gateway_subnet_id" {
   value = concat(module.shared_services_vpc.*.this_transit_gateway_subnets, [null])[0]
 }
 
-output "shared_services_networkops_eventbus_arn" {
-  value = concat(module.shared_services_vpc.*.this_eventbridge_networkops_eventbus_arn, [null])[0]
-}
+//output "shared_services_networkops_eventbus_arn" {
+//  value = concat(module.shared_services_vpc.*.this_eventbridge_networkops_eventbus_arn, [null])[0]
+//}
 
 
 
@@ -50,9 +50,9 @@ output "spoke_vpc_transit_gateway_subnet_id" {
   value = concat(module.spoke_vpc.*.this_transit_gateway_subnets, [null])[0]
 }
 
-output "spoke_vpc_networkops_eventbus_arn" {
-  value = concat(module.spoke_vpc.*.this_eventbridge_networkops_eventbus_arn, [null])[0]
-}
+//output "spoke_vpc_networkops_eventbus_arn" {
+//  value = concat(module.spoke_vpc.*.this_eventbridge_networkops_eventbus_arn, [null])[0]
+//}
 
 
 

@@ -11,9 +11,9 @@
 
 ######### MUST BE CONFIGURED ##############
 which_vpc_type_are_you_creating={
-    shared_services_vpc     = false                                                   # Specify true or false
-    spoke_vpc               = true                                                    # Specify true or false
-    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or false
+    shared_services_vpc     = false     # Specify true or false
+    spoke_vpc               = true      # Specify true or false
+    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or fals
 }
 
 
@@ -80,9 +80,9 @@ security_grp_traffic_pattern = {
 endpoints = {
     s3_gateway          = true  # Specify true or false
     dynamodb            = true  # Specify true or false
-    secrets_manager     = true  # Specify true or false
-    kms                 = true  # Specify true or false
-    ec2                 = true  # Specify true or false
+    secrets_manager     = true # Specify true or false
+    kms                 = true # Specify true or false
+    ec2                 = true # Specify true or false
     ec2_messages        = false # Specify true or false
     ecs                 = false # Specify true or false
     ecs_agent           = false # Specify true or false
@@ -100,13 +100,13 @@ endpoints = {
 # ---------------------------------------------------------------------------------------------------------------
 ######### MUST BE CONFIGURED ##############
 route53_acts = {
-    create_standalone_private_hosted_zone                                       = true      # Specify true or false
-    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false     # Specify true or false
-    associate_with_dns_vpc_or_a_shared_services_vpc                             = false     # Specify true or false
-    associate_with_private_hosted_zone_with_centralized_dns_solution            = false     # Specify true or false
-    create_forwarding_rule_for_sub_domain                                       = false     # Specify true or false
-    create_forwarding_rule_for_domain                                           = false     # Specify true or false
-    share_forwarding_rule_with_aws_organization                                 = false     # Specify true or false
+    create_standalone_private_hosted_zone                                       = true  # Specify true or false
+    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
+    associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
+    associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
+    create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
+    create_forwarding_rule_for_domain                                           = false # Specify true or false
+    share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
 }
 
 
@@ -208,8 +208,8 @@ enable_vpc_flow_logs = true
 # Amazon VPC DHCP Option Map: This map allows you to enable the type of DHCP Options to create and associate
 # ---------------------------------------------------------------------------------------------------------------
 create_dhcp_options= {
-  dhcp_options        = true # Specify true or false
-  custom_dhcp_options = false # Specify true or false
+    dhcp_options        = true # Specify true or false
+    custom_dhcp_options = false # Specify true or false
 }
 
 # Custom DHCP Options configuration parameters.
@@ -246,7 +246,7 @@ private_subnets = [
     "100.64.1.0/24",
     "100.64.2.0/24",
     "100.64.3.0/24"
-  ]
+]
 
 # ---------------------------------------------------------------------------------------------------------------
 # Map of port and security group attributes required for the creations of the Amazon VPC Security Group
@@ -255,7 +255,7 @@ public_subnets = [
     "100.64.8.0/24",
     "100.64.9.0/24",
     "100.64.10.0/24"
-  ]
+]
 
 # ---------------------------------------------------------------------------------------------------------------
 # Transit Gateway Attachment Subnet
@@ -264,7 +264,7 @@ transit_gateway_subnets = [
     "100.64.0.0/28",
     "100.64.0.16/28",
     "100.64.0.32/28"
-  ]
+]
 
 # ---------------------------------------------------------------------------------------------------------------
 # Module: AWS-FSF-ADD-ROUTE
@@ -309,7 +309,7 @@ enable_private_dns = false
 
 # On-premises IP Range to be added to the spoke VPC security group
 # ---------------------------------------------------------------------------------------------------------------
-on_premises_cidrs = [ "172.16.0.0/12", "192.168.0.0/16", "10.0.0.0/8" ]
+on_premises_cidrs = [ "172.16.0.0/16", "172.17.0.0/16", "172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.22.0.0/16" ]
 
 # ---------------------------------------------------------------------------------------------------------------
 ##################################################### TAGS ######################################################
