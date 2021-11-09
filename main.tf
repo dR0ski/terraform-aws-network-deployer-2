@@ -34,9 +34,6 @@ locals{
 module "pave_account_with_network_orchestration_components" {
   source = "./aws-financial-services-framework-account-paving-for-networking-components"
   count = ((var.which_vpc_type_are_you_creating.pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration == true && var.which_vpc_type_are_you_creating.spoke_vpc ==false && var.which_vpc_type_are_you_creating.shared_services_vpc==false) ? 1:0)
-  providers = {
-    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
-  }
 
   # ----------------------------------------------------------------------------------------------------
   # VPC Type specifies the type of VPC being created. This is used in the EventBus and Lambda FNs
@@ -63,9 +60,6 @@ module "pave_account_with_network_orchestration_components" {
 module "shared_services_vpc" {
   source = "./aws-financial-services-framework-deploy-shared-services-vpc"
   count = ((var.which_vpc_type_are_you_creating.shared_services_vpc == true) ? 1:0)
-  providers = {
-    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
-  }
 
   # ----------------------------------------------------------------------------------------------------
   # CIDR Range to be used for creating your VPC
@@ -161,9 +155,6 @@ Assumptions:
 module "spoke_vpc" {
   source = "./aws-financial-services-framework-deploy-spoke-vpc"
   count = ((var.which_vpc_type_are_you_creating.spoke_vpc == true) ? 1:0)
-  providers = {
-    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
-  }
 
   # ----------------------------------------------------------------------------------------------------
   # CIDR Range to be used for creating your VPC

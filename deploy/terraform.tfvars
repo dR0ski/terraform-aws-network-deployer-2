@@ -12,8 +12,8 @@
 ######### MUST BE CONFIGURED ##############
 which_vpc_type_are_you_creating={
     shared_services_vpc     = false     # Specify true or false
-    spoke_vpc               = true      # Specify true or false
-    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or fals
+    spoke_vpc               = false      # Specify true or false
+    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = true    # Specify true or fals
 }
 
 

@@ -11,9 +11,9 @@
 
 ######### MUST BE CONFIGURED ##############
 which_vpc_type_are_you_creating={
-    shared_services_vpc     = false                                                   # Specify true or false
-    spoke_vpc               = true                                                    # Specify true or false
-    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or false
+    shared_services_vpc     = false                                                  # Specify true or false
+    spoke_vpc               = false                                                  # Specify true or false
+    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = true    # Specify true or false
 }
 
 
@@ -41,6 +41,18 @@ shared_services_network_operations_eventbus_arn                   = ""
 # ---------------------------------------------------------------------------------------------------------------
 spoke-vpc-network-operations-put-event-lambda-fn-name             = ""
 spoke_vpc_network_operations_eventbus_arn                         = ""
+
+
+/*
+
+vpc-network-operations-lambda-fn-arn = "arn:aws:lambda:us-west-2:900095077793:function:fsf-network-orchestrator_29edb730-bf0a-c589-9a35-9432db078e26"
+vpc-network-operations-lambda-fn-id = "fsf-network-orchestrator_29edb730-bf0a-c589-9a35-9432db078e26"
+vpc-network-operations-lambda-fn-name = "fsf-network-orchestrator_29edb730-bf0a-c589-9a35-9432db078e26"
+vpc-network-operations-put-event-lambda-fn-name = "fsf-network-event-writer_59628016-4675-b01d-ae1b-2b940453cf13"
+vpc_network_operations_eventbus_arn = "arn:aws:events:us-west-2:900095077793:event-bus/aws-fsf-network-operations-event-bus-8c78bdfd-1ffe-972b-2468-d3b8beb88780"
+
+*/
+
 
 # ---------------------------------------------------------------------------------------------------------------
 # Transit Gateway Association Task Map
