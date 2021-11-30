@@ -17,7 +17,7 @@ variable "tfe_workspace" {
 }
 variable "tfe_email" {
   type    = string
-  default = "someone@somewhere.resource"
+  # default = "someone@somewhere.resource"
 }
 variable "working_directory" {
   type    = string

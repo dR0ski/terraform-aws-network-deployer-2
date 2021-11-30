@@ -26,9 +26,7 @@ variable "additional_route_deployment_configuration" {
   default = false
 }
 
-variable "add_igw_route_to_externally_routable_route_tables" {
-  default = false
-}
+
 
 variable "create_private_nat_gateway" {default = false}
 
@@ -37,7 +35,7 @@ variable "create_public_nat_gateway" {default  = false}
 # VPC Route Table ID 
 # ---------------------------------------------------------------------------------------------------------------
 variable "aws_route_table_id"{
-    description = "Holds the ID of the route table for aws_routable subbnetss"
+    description = "Holds the ID of the route table for aws_routable subbnets"
     type = string
     default = "aws_route_table_id"
 
@@ -45,7 +43,7 @@ variable "aws_route_table_id"{
 
 
 variable "external_route_table_id"{
-    description = "Holds the ID of the route table for aws_routable subbnetss"
+    description = "Holds the ID of the route table for externally routable subbnets"
     type = string
     default = "external_oute_table_id"
 
@@ -53,7 +51,7 @@ variable "external_route_table_id"{
 
 
 variable "tgw_route_table_id"{
-    description = "Holds the ID of the route table for aws_routable subbnetss"
+    description = "Holds the ID of the route table for the transit gateway subbnets"
     type = string
     default = "tgw_route_table_id"
 
@@ -62,21 +60,21 @@ variable "tgw_route_table_id"{
 # Next Hop Infrastructure ID
 # ---------------------------------------------------------------------------------------------------------------
 variable "tgw_nexthopinfra_id"{
-    description = "Holds the ID of the route table for aws_routable subbnetss"
+    description = "Holds the ID of the route table for aws_routable subbnet"
     type = string
     default = "tgw-xyz"
 
 }
 
 variable "nat_gw_nexthop_infra_id"{
-  description = "Holds the ID of the route table for aws_routable subbnetss"
+  description = "Holds the ID of the nat gateway"
   type = string
   default = "nat-gw-xyz"
 
 }
 
 variable "igw_nexthop_infra_id"{
-  description = "Holds the ID of the route table for aws_routable subbnetss"
+  description = "Holds the ID of the internet gateway"
   type = string
   default = "igw-abc-123"
 }

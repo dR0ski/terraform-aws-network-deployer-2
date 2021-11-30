@@ -50,6 +50,7 @@ deploy/network_orchestration_infrastructure/backend.tf
 
 # Terraform Lock
 .terraform.lock.hcl
+.terraform.lock
 
 # Archived files
 archived-endpoints-module.txt

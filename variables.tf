@@ -259,7 +259,7 @@ variable "dns_host_names" {
 variable "vpc_cidr_block" {
   description = "The cidr block allocated to this vpc."
   type    = string
-  default = "100.64.0.0/16"
+  # default = "100.64.0.0/16"
   validation {
     condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}($|/(16|17|18|19|20|21|22|23|24|25|26|27|28))$", var.vpc_cidr_block))
     error_message = "Invalid IPv4 CIDR Block."
@@ -310,7 +310,7 @@ variable "create_dhcp_options" {
 # In other words, this is what ends up being the search value in the /etc/resolv.conf file.
 # Domain for Amazon Provided DNS
 variable "custom_domain_name" {
-  default = "example.com"
+  # default = "example.com"
 }
 
 
@@ -335,7 +335,7 @@ variable "netbios_node_type" {
 
 variable "private_hosted_zone_name"{
   type = list(string)
-  default =  ["anaconda.aws-fsf-corp.com"]
+  # default =  ["anaconda.aws-fsf-corp.com"]
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -604,41 +604,40 @@ variable "number_of_azs_to_deploy_to" {
 variable "Application_ID" {
   description = "The Application ID of the application that will be hosted inside this Amazon VPC."
   type = string
-  default = "please_add_this_info"
 }
 
 variable "Application_Name" {
   description = "The name of the application. Max 10 characters. Allowed characters [0-9A-Za-z]."
   type = string
-  default = "please_add_this_info"
+
 }
 
 variable "Business_Unit" {
   description = "The business unit or line of business to which this application belongs."
   type = string
-  default = "please_add_this_info"
+
 }
 
 variable "Environment_Type" {
-  description = "The applications environment type. Possible values: LAB, SandBox, DEV, UAT, PROD."
+  description = "The applications environment type. Allowed values are: DEV, UAT, PROD, Shared Services."
   type = string
-  default = "DEV"
+
 }
 
 variable "CostCenterCode" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
-  default = "CB_0000000"
+
 }
 
 variable "CreatedBy" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
-  default = "Androski_Spicer"
+
 }
 
 variable "Manager" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
-  default = "please_add_this_info"
+
 }
