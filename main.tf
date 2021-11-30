@@ -95,7 +95,7 @@ module "shared_services_vpc" {
   # ----------------------------------------------------------------------------------------------------
   # AWS Region where VPC is to be created
   # ----------------------------------------------------------------------------------------------------
-  aws_region                            = var.aws_region.paris
+  aws_region                            = var.aws_region
 
   # ----------------------------------------------------------------------------------------------------
   # TGW Association
@@ -120,9 +120,50 @@ module "shared_services_vpc" {
   shared-services-vpc-network-operations-put-event-lambda-fn-name   = var.shared-services-vpc-network-operations-put-event-lambda-fn-name
   shared_services_network_operations_eventbus_arn                   = var.shared_services_network_operations_eventbus_arn
 
+  # ----------------------------------------------------------------------------------------------------
+  # Route 53 Resolver DNS Firewall Implementation
+  # ----------------------------------------------------------------------------------------------------
+  firewall_fail_open                                                = var.firewall_fail_open
+  domain_list_name                                                  = var.domain_list_name
+  firewall_rule_group                                               = var.firewall_rule_group
+  route_53_resolver_firewall_rule_name                              = var.route_53_resolver_firewall_rule_name
+  route_53_resolver_firewall_rule_block_override_dns_type           = var.route_53_resolver_firewall_rule_block_override_dns_type
+  route_53_resolver_firewall_rule_block_override_domain             = var.route_53_resolver_firewall_rule_block_override_domain     # Required if block_response is OVERRIDE
+  route_53_resolver_firewall_rule_block_override_ttl                = var.route_53_resolver_firewall_rule_block_override_ttl           # Required if block_response is OVERRIDE
+  route_53_resolver_firewall_rule_block_response                    = var.route_53_resolver_firewall_rule_block_response    # Required if action is BLOCK
+  route_53_resolver_firewall_rule_priority                          = var.route_53_resolver_firewall_rule_priority          # Required
+  firewall_rule_group_association_priority                          = var.firewall_rule_group_association_priority          # Required - Provide a num <> "100" and "9900"
+  firewall_rule_group_association_name                              = var.firewall_rule_group_association_name
+  domain_list                                                       = var.domain_list
+  action_type                                                       = var.action_type
+  ram_actions                                                       = var.ram_actions
 
+  # ----------------------------------------------------------------------------------------------------
+  # Internet Gateway Asset
+  # ----------------------------------------------------------------------------------------------------
+  igw_decisions              = var.igw_decisions
+
+  # ----------------------------------------------------------------------------------------------------
+  # Centralized NAT Assets
+  # ----------------------------------------------------------------------------------------------------
+  byoip_id                      = var.byoip_id
+  number_of_azs_to_deploy_to    = var.number_of_azs_to_deploy_to
+  nat_decisions                 = var.nat_decisions
+  nat_gateway_connectivity_type = var.nat_gateway_connectivity_type
+  create_private_nat_gateway    = var.create_private_nat_gateway
+  create_public_nat_gateway     = var.create_public_nat_gateway
+
+  # ----------------------------------------------------------------------------------------------------
+  # Route Addition
+  # ----------------------------------------------------------------------------------------------------
+  default_deployment_route_configuration                  = var.default_deployment_route_configuration
+  additional_route_deployment_configuration               = var.additional_route_deployment_configuration
+  tgw_subnet_route_destination_for_private_nat_deployment = var.tgw_subnet_route_destination_for_private_nat_deployment
+
+
+  # ----------------------------------------------------------------------------------------------------
   # Tags
-  # -------
+  # ----------------------------------------------------------------------------------------------------
   Application_ID                            = var.Application_ID
   Application_Name                          = local.shared-joint-name
   Business_Unit                             = var.Business_Unit
@@ -190,7 +231,7 @@ module "spoke_vpc" {
   # ----------------------------------------------------------------------------------------------------
   # AWS Region where VPC is to be created
   # ----------------------------------------------------------------------------------------------------
-  aws_region                                      = var.aws_region.paris
+  aws_region                                      = var.aws_region
 
   # ----------------------------------------------------------------------------------------------------
   # TGW Association (Backend Data Source Configuration)
@@ -217,6 +258,15 @@ module "spoke_vpc" {
   spoke-vpc-network-operations-put-event-lambda-fn-name    = var.spoke-vpc-network-operations-put-event-lambda-fn-name
   spoke_vpc_network_operations_eventbus_arn                = var.spoke_vpc_network_operations_eventbus_arn
 
+  # ----------------------------------------------------------------------------------------------------
+  # Route 53 Resolver
+  # ----------------------------------------------------------------------------------------------------
+  route_53_resolver_firewall_actions                           = var.route_53_resolver_firewall_actions
+  route_53_resolver_firewall_group                             = var.route_53_resolver_firewall_group
+  route_53_resolver_firewall_rule_group_association_priority   = var.route_53_resolver_firewall_rule_group_association_priority
+  route_53_resolver_firewall_rule_group_association_name       = var.route_53_resolver_firewall_rule_group_association_name
+
+
 
   # ----------------------------------------------------------------------------------------------------
   # VPC Endpoints
@@ -225,7 +275,7 @@ module "spoke_vpc" {
   # Passes a boolean map with the endpoints to be configure. By default on the Gateway Endpoints are
   # enabled for spoke VPCs
   # ----------------------------------------------------------------------------------------------------
-  endpoints                                       = var.endpoints
+  endpoints                                                   = var.endpoints
 
   # ----------------------------------------------------------------------------------------------------
   # Integrating with Centralized VPC Endpoints (If Available)

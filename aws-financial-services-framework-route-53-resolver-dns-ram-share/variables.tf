@@ -1,37 +1,6 @@
-variable "vpc_id" {default = ""}
-variable "firewall_fail_open" {default = ""}
-variable "domain_list_name" {default = ["",""]}
-variable "firewall_rule_group" {default = ""}
-variable "route_53_resolver_firewall_rule_name" {default = ""}
-variable "route_53_resolver_firewall_rule_action" {default = ""}
-variable "route_53_resolver_firewall_rule_block_override_dns_type" {default = ""}
-variable "route_53_resolver_firewall_rule_block_override_domain" {default = ""}
-variable "route_53_resolver_firewall_rule_block_override_ttl" {default = 1}
-variable "route_53_resolver_firewall_rule_block_response" {default = ""}
-variable "route_53_resolver_firewall_rule_priority" {default = 100}
-variable "firewall_rule_group_association_priority" {default = 100}
-variable "firewall_rule_group_association_name" {default = ""}
-variable "my_principal_arn" {default=""}
+
 variable "resolver_dns_firewall_ram_share_name" {default="resolver_dns_firewall_ram_share"}
 variable "allow_external_principals" {default=false}
-
-variable "domain_list" {
-  type = map(list(string))
-  default = {
-    allow = [""]
-    deny  = [""]
-    alert = [""]
-  }
-}
-
-variable "action_type" {
-  type = map(bool)
-  default = {
-    allow = true
-    deny  = false
-    alert = false
-  }
-}
 
 variable "ram_actions" {
   type = map(bool)
@@ -39,7 +8,6 @@ variable "ram_actions" {
     create_resource_share = true
   }
 }
-
 # ---------------------------------------------------------------------------------------------------------------
 # Variables that makes up the AWS Tags assigned to the VPC on creation.
 # ---------------------------------------------------------------------------------------------------------------
@@ -52,7 +20,7 @@ variable "Application_ID" {
 variable "Application_Name" {
   description = "The name of the application. Max 10 characters. Allowed characters [0-9A-Za-z]."
   type = string
-  default = "please_add_this_info"
+  default = "resolver_dns_firewall_ram_share"
 }
 
 variable "Business_Unit" {

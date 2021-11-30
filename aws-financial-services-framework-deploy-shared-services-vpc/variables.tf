@@ -18,6 +18,60 @@ variable "shared_services_network_operations_eventbus_arn" {default = ""}
 
 variable "vpc_env_type"{default="shared"}
 
+# ---------------------------------------------------------------------------------------------------------------
+##################################################### Centralized NAT ###########################################
+# ---------------------------------------------------------------------------------------------------------------
+
+variable "byoip_id" {default = ""}
+
+variable "create_private_nat_gateway" {default = false}
+
+variable "create_public_nat_gateway" {default  = false}
+
+variable "nat_decisions" {
+  type = map(bool)
+  default = {
+    byoip                   = false
+    create_internet_gateway = true
+    create_eip              = true
+    create_nat_gateway      = false
+  }
+}
+
+variable "nat_gateway_connectivity_type" {
+  type = map(bool)
+  default = {
+    public = true
+    private = false
+  }
+}
+
+variable "number_of_azs_to_deploy_to" {
+  type = number
+  default = 2
+  validation {
+    condition     = var.number_of_azs_to_deploy_to >=2
+    error_message = "A minimum of two AZs are required and as a result two subnet IDs and EIPs. Please correct to a number of two or greaters."
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+#################################################### Internet Gateway ###########################################
+# ---------------------------------------------------------------------------------------------------------------
+
+variable "igw_decisions" {
+  type = map(bool)
+  default = {
+    ipv4_internet_gateway = false
+    ipv6_internet_gateway = false
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+##################################################### Route 53 Actions ##########################################
+# ---------------------------------------------------------------------------------------------------------------
 variable "route53_acts" {
   type = map(bool)
   default = {
@@ -298,7 +352,7 @@ variable "route_table" {
   type = map(bool)
   default = {
     aws_routable_table          = true
-    tgw_table                   = false
+    tgw_table                   = true
     external_table              = true
   }
 }
@@ -311,6 +365,17 @@ variable "next_hop_infra" {
   }
 }
 
+variable "default_deployment_route_configuration" {
+  default = true
+}
+
+variable "additional_route_deployment_configuration" {
+  default = true
+}
+
+variable "add_igw_route_to_externally_routable_route_tables" {
+  default=true
+}
 
 # TGW Destination CIDR Block
 # ---------------------------------------------------------------------------------------------------------------
@@ -320,12 +385,12 @@ variable "tgw_aws_route_destination"{
 
 }
 
-
 variable "tgw_external_route_destination"{
-  description = "Holds the ID of the route table for aws_routable subbnetss"
-  default = ["0.0.0.0/0"]
+  description = "Contains the Destination IP/s for the externally routable subnets"
+  default = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/12"]
 
 }
+
 
 # Not used in this module
 # ---------------------------------------------------------------------------------------------------------------
@@ -335,7 +400,19 @@ variable "tgw_route_destination"{
 
 }
 
+variable "tgw_subnet_route_destination_for_public_nat_deployment"{
+  description = "Contains the DEFAULT Route as a Destination IP for the tgw route table"
+  default = ["0.0.0.0/0"]
+}
 
+variable "tgw_subnet_route_destination_for_private_nat_deployment"{
+  description = "Contains the DEFAULT Route as a Destination IP for the tgw route table"
+  default = ["0.0.0.0/0"]
+}
+
+variable "igw_destination_cidr_block" {
+  default = "0.0.0.0/0"
+}
 # ---------------------------------------------------------------------------------------------------------------
 # VPC ENDPOINTS
 # ---------------------------------------------------------------------------------------------------------------
@@ -413,6 +490,59 @@ variable "security_grp_traffic_pattern" {
 
   }
 }
+
+# ---------------------------------------------------------------------------------------------------------------
+# Route 53 Resolver DNS Firewall
+# ---------------------------------------------------------------------------------------------------------------
+variable "firewall_fail_open" {default = ""}
+variable "domain_list_name" {default = ""}
+variable "firewall_rule_group" {default = ""}
+variable "route_53_resolver_firewall_rule_name" {default = ""}
+variable "route_53_resolver_firewall_rule_block_override_dns_type" {default = ""}
+variable "route_53_resolver_firewall_rule_block_override_domain" {default = ""}
+variable "route_53_resolver_firewall_rule_block_override_ttl" {default = 1}
+variable "route_53_resolver_firewall_rule_block_response" {default = ""}
+variable "firewall_rule_group_association_priority" {default = 100}
+variable "firewall_rule_group_association_name" {default = ""}
+variable "resource_share_arn" {default = ""}
+
+variable "route_53_resolver_firewall_rule_priority" {
+  type = map(number)
+  default = {
+    allow = 100
+    deny  = 101
+    alert = 102
+  }
+}
+
+variable "domain_list" {
+  type = map(list(string))
+  default = {
+    allow = [""]
+    deny  = [""]
+    alert = [""]
+  }
+}
+
+variable "action_type" {
+  type = map(bool)
+  default = {
+    allow = false
+    deny  = false
+    alert = false
+  }
+}
+
+variable "ram_actions" {
+  type = map(bool)
+  default = {
+    create_resource_share = false
+  }
+}
+
+variable "resolver_dns_firewall_ram_share_name" {default="aws_fsf_resolver_dns_firewall_ram_share"}
+variable "allow_external_principals" {default=false}
+
 
 
 # ---------------------------------------------------------------------------------------------------------------

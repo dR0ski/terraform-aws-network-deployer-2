@@ -65,6 +65,25 @@ variable "transit_gateway_association_instructions" {
   }
 }
 
+variable "route_53_resolver_firewall_actions" {
+  type = map(bool)
+  default = {
+    resolver_firewall_resource_share_exists = true
+  }
+}
+
+variable "route_53_resolver_firewall_group" {
+  default = ""
+}
+
+variable "route_53_resolver_firewall_rule_group_association_priority"{
+  default = 100
+}
+
+variable "route_53_resolver_firewall_rule_group_association_name" {
+  default = ""
+}
+
 
 # ---------------------------------------------------------------------------------------------------------------
 # AWS VPC SECURITY GROUP | Decision Map | Adding true creates the security that you want
@@ -134,31 +153,7 @@ variable "route53_acts" {
 # AWS REGION | REGION CODE MAPPED TO REGION NAME
 # ---------------------------------------------------------------------------------------------------------------
 variable "aws_region"{
-  type = map(string)
-  default = {
-    n_virginia        = "us-east-1"
-    ohio              = "us-east-2"
-    n_california      = "us-west-1"
-    oregon            = "us-west-2"
-    canada_montreal   = "ca-central-1"
-    ireland           = "eu-west-1"
-    london            = "eu-west-2"
-    paris             = "eu-west-3"
-    south_africa      = "af-south-1"
-    hong_kong         = "ap-east-1"
-    mumbai            = "ap-south-1"
-    osaka_local       = "ap-northeast-3"
-    seoul             = "ap-northeast-2"
-    singapore         = "ap-southeast-1"
-    sydney            = "ap-southeast-2"
-    tokyo             = "ap-northeast-1"
-    frankfurt         = "eu-central-1"
-    milan             = "eu-south-1"
-    paris             = "eu-west-3"
-    stockholm         = "eu-north-1"
-    middle_east       = "me-south-1"
-    sao_paulo         = "sa-east-1"
-  }
+  default = ""
 }
 
 
@@ -410,6 +405,18 @@ variable "next_hop_infra" {
   }
 }
 
+variable "default_deployment_route_configuration" {
+  default = true
+}
+
+variable "additional_route_deployment_configuration" {
+  default = true
+}
+
+variable "add_igw_route_to_externally_routable_route_tables" {
+  default=true
+}
+
 
 # TGW Destination CIDR Block
 # ---------------------------------------------------------------------------------------------------------------
@@ -433,6 +440,20 @@ variable "tgw_route_destination"{
   default = ["0.0.0.0/0"]
 
 }
+
+
+variable "tgw_subnet_route_destination_for_public_nat_deployment"{
+  description = "Contains the DEFAULT Route as a Destination IP for the tgw route table"
+  default = ["0.0.0.0/0"]
+}
+
+variable "tgw_subnet_route_destination_for_private_nat_deployment"{
+  description = "Contains the DEFAULT Route as a Destination IP for the tgw route table"
+  default = ["0.0.0.0/0"]
+}
+
+
+
 
 # Decision to create AWS Route 53 Private Hosted Zones
 # ---------------------------------------------------------------------------------------------------------------
@@ -470,10 +491,109 @@ variable "enable_private_dns" {
 variable "on_premises_cidrs" {
   description = "On-premises or non VPC network range"
   type    = list(string)
-  default = [ "172.16.0.0/16", "172.17.0.0/16", "172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.22.0.0/16" ]
+  default = [ "172.16.0.0/12", "192.168.0.0/16", "10.0.0.0/8" ]
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Route 53 Resolver DNS Firewall
+# ---------------------------------------------------------------------------------------------------------------
+variable "firewall_fail_open" {default = ""}
+variable "domain_list_name" {default = ""}
+variable "firewall_rule_group" {default = ""}
+variable "route_53_resolver_firewall_rule_name" {default = ""}
+variable "route_53_resolver_firewall_rule_block_override_dns_type" {default = ""}
+variable "route_53_resolver_firewall_rule_block_override_domain" {default = ""}
+variable "route_53_resolver_firewall_rule_block_override_ttl" {default = 1}
+variable "route_53_resolver_firewall_rule_block_response" {default = ""}
+variable "firewall_rule_group_association_priority" {default = 100}
+variable "firewall_rule_group_association_name" {default = ""}
+
+
+variable "route_53_resolver_firewall_rule_priority" {
+  type = map(number)
+  default = {
+    allow = 100
+    deny  = 101
+    alert = 102
+  }
+}
+
+variable "domain_list" {
+  type = map(list(string))
+  default = {
+    allow = [""]
+    deny  = [""]
+    alert = [""]
+  }
+}
+
+variable "action_type" {
+  type = map(bool)
+  default = {
+    allow = false
+    deny  = false
+    alert = false
+  }
+}
+
+variable "ram_actions" {
+  type = map(bool)
+  default = {
+    create_resource_share = false
+  }
+}
+
+variable "resolver_dns_firewall_ram_share_name" {default="aws_fsf_resolver_dns_firewall_ram_share"}
+variable "allow_external_principals" {default=false}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+#################################################### Internet Gateway ###########################################
+# ---------------------------------------------------------------------------------------------------------------
+variable "igw_decisions" {
+  type = map(bool)
+  default = {
+    ipv4_internet_gateway = false
+    ipv6_internet_gateway = false
+  }
 }
 
 
+# ---------------------------------------------------------------------------------------------------------------
+##################################################### Centralized NAT ######################################################
+# ---------------------------------------------------------------------------------------------------------------
+variable "byoip_id" {default = ""}
+
+variable "create_private_nat_gateway" {default = false}
+
+variable "create_public_nat_gateway" {default  = false}
+
+variable "nat_decisions" {
+  type = map(bool)
+  default = {
+    byoip                   = false
+    create_internet_gateway = true
+    create_eip              = true
+    create_nat_gateway      = true
+  }
+}
+
+variable "nat_gateway_connectivity_type" {
+  type = map(bool)
+  default = {
+    public = true
+    private = false
+  }
+}
+
+variable "number_of_azs_to_deploy_to" {
+  type = number
+  default = 2
+  validation {
+    condition     = var.number_of_azs_to_deploy_to >=2
+    error_message = "A minimum of two AZs are required and as a result two subnet IDs and EIPs. Please correct to a number of two or greaters."
+  }
+}
 # ---------------------------------------------------------------------------------------------------------------
 ##################################################### TAGS ######################################################
 # ---------------------------------------------------------------------------------------------------------------

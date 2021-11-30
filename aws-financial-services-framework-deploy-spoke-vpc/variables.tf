@@ -22,6 +22,26 @@ variable "spoke_vpc_network_operations_eventbus_arn" {default = ""}
 
 variable "vpc_env_type"{default="spoke"}
 
+variable "route_53_resolver_firewall_actions" {
+  type = map(bool)
+  default = {
+    resolver_firewall_resource_share_exists = true
+  }
+}
+
+variable "route_53_resolver_firewall_group" {
+  default = ""
+}
+
+variable "route_53_resolver_firewall_rule_group_association_priority"{
+  default = 100
+}
+
+variable "route_53_resolver_firewall_rule_group_association_name" {
+  default = ""
+}
+
+
 variable "private_hosted_zone_name"{
   type = list(string)
   default =  ["anaconda.aws-fsf-corp.com"]
@@ -401,6 +421,17 @@ variable "next_hop_infra" {
   }
 }
 
+variable "default_deployment_route_configuration" {
+  default = false
+}
+
+variable "additional_route_deployment_configuration" {
+  default = false
+}
+
+variable "add_igw_route_to_externally_routable_route_tables" {
+  default = false
+}
 
 # TGW Destination CIDR Block
 # ---------------------------------------------------------------------------------------------------------------

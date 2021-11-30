@@ -1,29 +1,23 @@
+# ---------------------------------------------------------------------------------------------------------------
 data "aws_caller_identity" "current" {}
+data "aws_organizations_organization" "my_aws_organization" {}
+data "aws_partition" "this_region_partition"{}
+data "aws_region" "aws_region" {}
 #-----------------------------------------------------------------------------------------------------------------
 
-# Creates data sources that provide access to subnets based on the tags attached to them
+
 # ---------------------------------------------------------------------------------------------------------------
-//data "aws_subnet_ids" "aws_routable_subnet_id" {
-//  vpc_id = var.vpc_id
-//
-//  tags = {
-//   Type = "AWS_Routable_Subnet"
-//  }
-//}
-
-//data "aws_subnet_ids" "externally_routable_subnet_id" {
-//  vpc_id = var.vpc_id
-//
-//  tags = {
-//    Type = "Externally_Routable_Subnet"
-//  }
-//}
+# Data source that extrapolates the Organizations ARN the account belongs to
+# ---------------------------------------------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------------------------------------------
 # VPC Endpoints 
 # ---------------------------------------------------------------------------------------------------------------
 
-# S3 VPC Endpoint 
+# ---------------------------------------------------------------------------------------------------------------
+# S3 VPC Endpoint
+# ---------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "s3_ep" {
 	vpc_id        = var.vpc_id
 	service_name  = "com.amazonaws.${var.aws_region}.s3"
@@ -31,18 +25,35 @@ resource "aws_vpc_endpoint" "s3_ep" {
 		{
 		 "Statement": [{
 								"Effect": "Allow",
-								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
+								"Principal": "*",
 								"Action": [
-									 "s3:*"
+									 	"s3:PutObject",
+										"s3:PutObjectAcl",
+										 "s3:CreateBucket",
+                                         "s3:ListAllMyBuckets",
+                                         "s3:GetBucketLocation",
+										 "s3:GetObjectVersion",
+                                         "s3:GetBucketAcl",
+										"s3:DeleteObject",
+                                        "s3:DeleteObjectVersion",
+                                        "s3:PutLifecycleConfiguration",
+										"s3:GetObject"
 								],
-								"Resource": "*"
+								"Resource": "arn:aws:s3:::*",
+								"Condition": {
+									"StringEquals":
+									{ "aws:PrincipalAccount": [ "${data.aws_caller_identity.current.account_id}"],
+										"s3:ResourceAccount": "${data.aws_caller_identity.current.account_id}"
+									}
+
+								}
 						}]
 	 
 		}
 		POLICY
 	count        = var.endpoints.s3_gateway == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_s3"
+		Name = "aws_fsf_s3_endpoint"
 		Environment = var.environment_type
 	}
 	
@@ -59,9 +70,8 @@ resource "aws_vpc_endpoint_route_table_association" "s3_ep_association" {
   vpc_endpoint_id = aws_vpc_endpoint.s3_ep[0].id
   
 }
-#-----------------------------------------------------------------------------------------------------------------
 
-
+# ---------------------------------------------------------------------------------------------------------------
 # DynamoDB VPC Endpoint 
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "dynamodb_ep" {
@@ -71,16 +81,39 @@ resource "aws_vpc_endpoint" "dynamodb_ep" {
 		{
 		 "Statement": [{
 								"Effect": "Allow",
-								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["dynamodb:*"],
-								"Resource": "*"
+								"Principal": "*",
+								"Action": ["dynamodb:BatchGetItem",
+											"dynamodb:BatchWriteItem",
+											"dynamodb:ConditionCheckItem",
+											"dynamodb:PutItem",
+											"dynamodb:CreateTable",
+											"dynamodb:CreateGlobalTable",
+											"dynamodb:DescribeTable",
+											"dynamodb:DeleteItem",
+											"dynamodb:DeleteBackup",
+											"dynamodb:DeleteTable",
+											"dynamodb:GetItem",
+											"dynamodb:Scan",
+											"dynamodb:Query",
+											"dynamodb:UpdateItem",
+											"dynamodb:GetShardIterator",
+											"dynamodb:Scan",
+											"dynamodb:Query",
+											"dynamodb:DescribeStream",
+											"dynamodb:GetRecords",
+											"dynamodb:ListTables",
+											"dynamodb:ListStreams",
+											"dynamodb:BatchWriteItem"
+								],
+								"Resource": "arn:${data.aws_partition.this_region_partition.id}:dynamodb:${data.aws_region.aws_region.id}:${data.aws_caller_identity.current.account_id}:*"
+
 						}]
 	 
 		}
 		POLICY
 	count        = var.endpoints.dynamodb == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_dynamodb"
+		Name = "aws_fsf_dynamodb_endpoint"
 		Environment = var.environment_type
 	}
 }
@@ -95,8 +128,8 @@ resource "aws_vpc_endpoint_route_table_association" "dynamodb_ep_association" {
 	vpc_endpoint_id = aws_vpc_endpoint.dynamodb_ep[0].id
 }
 
-#-----------------------------------------------------------------------------------------------------------------
 
+#-----------------------------------------------------------------------------------------------------------------
 # EC2 Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ec2_endpoint" {
@@ -107,12 +140,38 @@ resource "aws_vpc_endpoint" "ec2_endpoint" {
 	policy = <<POLICY
 		{
 		 "Statement": [
-			{
-					"Action": ["ec2:*"],
-					"Effect": "Allow",
-					"Principal":{"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-					"Resource": "*"
-			}]
+			    {
+        "Action": "ec2:*",
+        "Effect": "Allow",
+        "Resource": "*",
+        "Principal": "*"
+    },
+    {
+        "Action": [
+            "ec2:CreateVolume"
+        ],
+        "Effect": "Deny",
+        "Resource": "*",
+        "Principal": "*",
+        "Condition": {
+            "Bool": {
+                "ec2:Encrypted": "false"
+            }
+        }
+    },
+    {
+        "Action": [
+            "ec2:RunInstances"
+        ],
+        "Effect": "Deny",
+        "Resource": "*",
+        "Principal": "*",
+        "Condition": {
+            "Bool": {
+                "ec2:Encrypted": "false"
+            }
+        }
+    }]
 		}
 		POLICY
 	count        = var.endpoints.ec2 == true ? 1 : 0
@@ -122,13 +181,13 @@ resource "aws_vpc_endpoint" "ec2_endpoint" {
 
 	private_dns_enabled = var.enable_private_dns
 	tags = {
-		Name = "spokeVPC_ec2"
+		Name = "aws_fsf_ec2_endpoint"
 		Environment = var.environment_type
 	}
 }
 
 
-
+# ---------------------------------------------------------------------------------------------------------------
 # EC2 Messages Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ec2messages_endpoint" {
@@ -143,11 +202,12 @@ resource "aws_vpc_endpoint" "ec2messages_endpoint" {
 	private_dns_enabled = var.enable_private_dns
 	count        = var.endpoints.ec2_messages == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_ec2_messages"
+		Name = "aws_fsf_ec2_messages_endpoint"
 		Environment = var.environment_type
 	}
 }
 
+# ---------------------------------------------------------------------------------------------------------------
 # SSM Messages Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ssmmessages_endpoint" {
@@ -163,12 +223,12 @@ resource "aws_vpc_endpoint" "ssmmessages_endpoint" {
 	private_dns_enabled = var.enable_private_dns
 	count        = var.endpoints.ssm_messages == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_ssm_messages"
+		Name = "aws_fsf_ssm_messages_endpoint"
 		Environment = var.environment_type 
 	}
 }
 
-
+# ---------------------------------------------------------------------------------------------------------------
 # SSM Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ssm_endpoint" {
@@ -184,11 +244,12 @@ resource "aws_vpc_endpoint" "ssm_endpoint" {
 	private_dns_enabled = var.enable_private_dns
 	count        = var.endpoints.ssm == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_ssm"
+		Name = "aws_fsf_ssm_endpoint"
 		Environment = var.environment_type
 	}
 }
 
+# ---------------------------------------------------------------------------------------------------------------
 # KMS Endpoint 
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "kms_endpoint" {
@@ -204,11 +265,12 @@ resource "aws_vpc_endpoint" "kms_endpoint" {
 	private_dns_enabled = var.enable_private_dns
 	count        = var.endpoints.kms == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_kms"
+		Name = "aws_fsf_kms_endpoint"
 		Environment = var.environment_type
 	}
 }
 
+# ---------------------------------------------------------------------------------------------------------------
 # Secrets Manager Endpoint 
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "secretsmanager_endpoint" {
@@ -225,21 +287,45 @@ resource "aws_vpc_endpoint" "secretsmanager_endpoint" {
 		{
 		 "Statement": [{
 								"Effect": "Allow",
-								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["secretsmanager:*"],
-								"Resource": "*"
+								"Principal": "*",
+								"Action": [
+									"secretsmanager:DescribeSecret",
+									"secretsmanager:GetRandomPassword",
+									"secretsmanager:GetSecretValue",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:CancelRotateSecret",
+                                    "secretsmanager:CreateSecret",
+                                    "secretsmanager:DeleteResourcePolicy",
+                                    "secretsmanager:DeleteSecret",
+                                    "secretsmanager:GetRandomPassword",
+                                    "secretsmanager:GetResourcePolicy",
+                                    "secretsmanager:GetSecretValue",
+                                    "secretsmanager:ListSecrets",
+                                    "secretsmanager:ListSecretVersionIds",
+                                    "secretsmanager:PutResourcePolicy",
+                                    "secretsmanager:PutSecretValue",
+                                    "secretsmanager:RemoveRegionsFromReplication",
+                                    "secretsmanager:ReplicateSecretToRegions",
+                                    "secretsmanager:RestoreSecret",
+                                    "secretsmanager:RotateSecret",
+                                    "secretsmanager:StopReplicationToReplica",
+                                    "secretsmanager:UpdateSecret",
+                                    "secretsmanager:UpdateSecretVersionStage"
+								],
+								"Resource": "arn:${data.aws_partition.this_region_partition.id}:secretsmanager:${data.aws_region.aws_region.id}:${data.aws_caller_identity.current.account_id}:secret:*"
 						}]
 	 
 		}
 		POLICY
 	count        = var.endpoints.secrets_manager == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_secrets_manager"
+		Name = "aws_fsf_secrets_manager_endpoint"
 		Environment = var.environment_type
 	}
 }
 
-
+# ---------------------------------------------------------------------------------------------------------------
 # ECS Endpoint 
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ecs_endpoint" {
@@ -254,11 +340,12 @@ resource "aws_vpc_endpoint" "ecs_endpoint" {
 	private_dns_enabled = var.enable_private_dns
 	count        = var.endpoints.ecs == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_ecs"
+		Name = "aws_fsf_ecs_endpoint"
 		Environment = var.environment_type
 	}
 }
 
+# ---------------------------------------------------------------------------------------------------------------
 # ECS Agent Endpoint 
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ecs_agent_endpoint" {
@@ -273,11 +360,12 @@ resource "aws_vpc_endpoint" "ecs_agent_endpoint" {
 	private_dns_enabled = var.enable_private_dns
 	count        = var.endpoints.ecs_agent == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_ecs_agent"
+		Name = "aws_fsf_ecs_agent_endpoint"
 		Environment = var.environment_type
 	}
 }
 
+# ---------------------------------------------------------------------------------------------------------------
 # ECS Telemetry
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "ecs_telemetry_endpoint" {
@@ -292,12 +380,12 @@ resource "aws_vpc_endpoint" "ecs_telemetry_endpoint" {
 	private_dns_enabled = var.enable_private_dns
 	count        = var.endpoints.ecs_telemetry == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_ecs_telemetry"
+		Name = "aws_fsf_ecs_telemetry_endpoint"
 		Environment = var.environment_type
 	}
 }
 
-
+# ---------------------------------------------------------------------------------------------------------------
 # SNS Endpoint 
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "sns_endpoint" {
@@ -310,9 +398,10 @@ resource "aws_vpc_endpoint" "sns_endpoint" {
 		{
 		 "Statement": [{
 								"Effect": "Allow",
-								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["sns:*"],
-								"Resource": "*"
+								"Principal": "*",
+								"Action": ["sns:CreateTopic", "sns:ListTopics", "sns:SetTopicAttributes", "sns:DeleteTopic", "sns:Publish", "sns:Subscribe"],
+								"Resource": "arn:${data.aws_partition.this_region_partition.id}:sns:${data.aws_region.aws_region.id}:${data.aws_caller_identity.current.account_id}:*"
+
 						}]
 	 
 		}
@@ -323,11 +412,12 @@ resource "aws_vpc_endpoint" "sns_endpoint" {
 	]
 	private_dns_enabled = var.enable_private_dns
 	tags = {
-		Name = "spokeVPC_sns"
+		Name = "aws_fsf_sns_endpoint"
 		Environment = var.environment_type
 	}
 }
 
+# ---------------------------------------------------------------------------------------------------------------
 # SQS Endpoint 
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "sqs_endpoint" {
@@ -344,20 +434,39 @@ resource "aws_vpc_endpoint" "sqs_endpoint" {
 		{
 		 "Statement": [{
 								"Effect": "Allow",
-								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": ["sqs:*"],
-								"Resource": "*"
+								"Principal": "*",
+								"Action": ["sqs:ChangeMessageVisibility",
+											"sqs:ChangeMessageVisibilityBatch",
+											"sqs:CreateQueue",
+											"sqs:DeleteMessage",
+											"sqs:DeleteMessageBatch",
+											"sqs:DeleteQueue",
+											"sqs:SetQueueAttributes",
+											"sqs:GetQueueUrl",
+											"sqs:ListDeadLetterSourceQueues",
+											"sqs:ListQueueTags",
+											"sqs:ListQueues",
+											"sqs:PurgeQueue",
+											"sqs:ReceiveMessage",
+											"sqs:SendMessage",
+											"sqs:SendMessageBatch",
+											"sqs:SetQueueAttributes",
+											"sqs:TagQueue",
+											"sqs:UntagQueue"
+								],
+								"Resource": "arn:${data.aws_partition.this_region_partition.id}:sqs:${data.aws_region.aws_region.id}:${data.aws_caller_identity.current.account_id}:*"
 						}]
 	 
 		}
 		POLICY
 	count        = var.endpoints.sqs == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_sqs"
+		Name = "aws_fsf_sqs_endpoint"
 		Environment = var.environment_type
 	}
 }
 
+# ---------------------------------------------------------------------------------------------------------------
 # STS Endpoint
 #-----------------------------------------------------------------------------------------------------------------
 resource "aws_vpc_endpoint" "sts_endpoint" {
@@ -374,8 +483,16 @@ resource "aws_vpc_endpoint" "sts_endpoint" {
 		{
 		 "Statement": [{
 								"Effect": "Allow",
-								"Principal": {"AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-								"Action": "*",
+								"Principal": "*",
+								"Action": ["sts:AssumeRole",
+											"sts:AssumeRoleWithSaml",
+											"sts:AssumeRoleWithWebIdentity",
+											"sts:DecodeAuthorizationMessage",
+											"sts:GetAccessKeyInfo",
+											"sts:GetCallerIdentity",
+											"sts:GetFederationToken",
+											"sts:GetSessionToken"
+								],
 								"Resource": ["arn:aws:sts::${data.aws_caller_identity.current.account_id}:*"]
 						}]
 	 
@@ -383,7 +500,7 @@ resource "aws_vpc_endpoint" "sts_endpoint" {
 		POLICY
 	count        = var.endpoints.sts == true ? 1 : 0
 	tags = {
-		Name = "spokeVPC_sts"
+		Name = "aws_fsf_sts_endpoint"
 		Environment = var.environment_type
 	}
 }
@@ -424,5 +541,4 @@ module "terraform-aws-fsf-interface-endpoint-private-hosted-zone-creation" {
 	kms_endpoint_dns_zone_id 					= concat(aws_vpc_endpoint.kms_endpoint.*.dns_entry.0.hosted_zone_id, [null])[0]
 	secrets_manager_endpoint_dns_hostname 		= concat(aws_vpc_endpoint.secretsmanager_endpoint.*.dns_entry.0.dns_name, [null])[0]
 	secrets_manager_endpoint_dns_zone_id 		= concat(aws_vpc_endpoint.secretsmanager_endpoint.*.dns_entry.0.hosted_zone_id, [null])[0]
-
 }

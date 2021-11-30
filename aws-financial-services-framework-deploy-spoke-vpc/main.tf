@@ -199,16 +199,18 @@ module "fsf-spoke_vpc-transit-gateway-association" {
 # Add Route Module
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-spoke-vpc-add-route" {
-  source                          = "../aws-financial-services-framework-add-routes"
-  count = (var.transit_gateway_association_instructions.create_transit_gateway_association == true ? 1:0)
-  depends_on = [module.fsf-spoke-vpc-subnets, module.fsf-spoke-create-vpc-route-tables, module.fsf-spoke_vpc-transit-gateway-association, module.fsf-spoke-vpc-endpoints]
-  aws_route_table_id              = module.fsf-spoke-create-vpc-route-tables.aws_routable_routing_table_id
-  external_route_table_id         = module.fsf-spoke-create-vpc-route-tables.externally_routable_routing_table_id
-  tgw_aws_route_destination       = var.tgw_aws_route_destination
-  tgw_external_route_destination  = var.tgw_external_route_destination
-  tgw_nexthopinfra_id             = local.tgw_id                # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")     #ENTER TGW ID    : THIS COULD BE A MODULE REFERENCE OR MANUALLY ENTERED ID : IF CREATE TGW ROUTE IS TRUE
-  route_table                     = var.route_table
-  next_hop_infra                  = var.next_hop_infra
+  source                                            = "../aws-financial-services-framework-add-routes"
+  count                                             = (var.transit_gateway_association_instructions.create_transit_gateway_association == true ? 1:0)
+  depends_on                                        = [module.fsf-spoke-vpc-subnets, module.fsf-spoke-create-vpc-route-tables, module.fsf-spoke_vpc-transit-gateway-association, module.fsf-spoke-vpc-endpoints]
+  aws_route_table_id                                = module.fsf-spoke-create-vpc-route-tables.aws_routable_routing_table_id
+  external_route_table_id                           = module.fsf-spoke-create-vpc-route-tables.externally_routable_routing_table_id
+  tgw_aws_route_destination                         = var.tgw_aws_route_destination
+  tgw_external_route_destination                    = var.tgw_external_route_destination
+  tgw_nexthopinfra_id                               = local.tgw_id                # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")     #ENTER TGW ID    : THIS COULD BE A MODULE REFERENCE OR MANUALLY ENTERED ID : IF CREATE TGW ROUTE IS TRUE
+  route_table                                       = var.route_table
+  next_hop_infra                                    = var.next_hop_infra
+  default_deployment_route_configuration            = true
+  add_igw_route_to_externally_routable_route_tables = false
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -315,7 +317,7 @@ data "aws_lambda_invocation" "hi_centralized_asset_assoc_me_with_your_endpoints"
     "vpc_id": "${module.spoke_vpc.vpc_id}",
     "vpc_region": "${var.aws_region}",
     "eventbus_arn": "${var.shared_services_network_operations_eventbus_arn}",
-    "spoke_eventbus_arn": "${var.spoke_vpc_network_operations_eventbus_arn}" # data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn
+    "spoke_eventbus_arn": "${var.spoke_vpc_network_operations_eventbus_arn}"
   }
 JSON
 
@@ -334,8 +336,19 @@ data "aws_lambda_invocation" "hi_centralized_asset_assoc_me_with_your_dns_resour
     "event_type": "centralized_dns_association_request",
     "vpc_id": "${module.spoke_vpc.vpc_id}",
     "vpc_region": "${var.aws_region}",
-    "eventbus_arn": "${var.spoke_vpc_network_operations_eventbus_arn}" # data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn
+    "eventbus_arn": "${var.spoke_vpc_network_operations_eventbus_arn}"
   }
 JSON
 
+}
+# data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn
+# ---------------------------------------------------------------------------------------------------------------
+# AWS | Route 53 Resolver DNS Firewall  | -->
+# ---------------------------------------------------------------------------------------------------------------
+resource "aws_route53_resolver_firewall_rule_group_association" "rule_group_association" {
+  count =  var.route_53_resolver_firewall_actions.resolver_firewall_resource_share_exists==true ? 1:0
+  name                   = var.route_53_resolver_firewall_rule_group_association_name
+  firewall_rule_group_id = var.route_53_resolver_firewall_group
+  priority               = var.route_53_resolver_firewall_rule_group_association_priority
+  vpc_id                 = module.spoke_vpc.vpc_id
 }
