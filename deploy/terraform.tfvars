@@ -13,7 +13,7 @@
 ######### MUST BE CONFIGURED ##############
 # ---------------------------------------------------------------------------------------------------------------
 which_vpc_type_are_you_creating={
-    shared_services_vpc     = false    # Specify true or false
+    shared_services_vpc     = true    # Specify true or false
     spoke_vpc               = false     # Specify true or false
     pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or fals
 }
@@ -21,18 +21,19 @@ which_vpc_type_are_you_creating={
 # ---------------------------------------------------------------------------------------------------------------
 #  AWS TRANSIT GATEWAY IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
 # ---------------------------------------------------------------------------------------------------------------
-transit_gateway_id                            = ""
-transit_gateway_dev_route_table               = ""
-transit_gateway_uat_route_table               = ""
-transit_gateway_shared_svc_route_table        = ""
-transit_gateway_packet_inspection_route_table = ""
-transit_gateway_prod_route_table              = ""
+transit_gateway_id                            = "tgw-0e5030b56ec68c3dc"
+transit_gateway_dev_route_table               = "tgw-rtb-0a569b29ac7fcf3cb"
+transit_gateway_uat_route_table               = "tgw-rtb-0413d44e2f4ae6197"
+transit_gateway_shared_svc_route_table        = "tgw-rtb-0e404319362ea89bf"
+transit_gateway_packet_inspection_route_table = "tgw-rtb-049ffb744c8dcb375"
+transit_gateway_prod_route_table              = "tgw-rtb-035d1e4a9856b5b88"
 
 # ---------------------------------------------------------------------------------------------------------------
 #  SHARED SERVICES IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
 # ---------------------------------------------------------------------------------------------------------------
-shared_services_vpc_id                                            = ""
-shared-services-vpc-network-operations-put-event-lambda-fn-name   = ""
+shared_services_vpc_id                                            = "vpc-0ce10ea50ab2df5d2"
+shared-services-vpc-network-operations-put-event-lambda-fn-name   = "fsf-network-event-writer_6827bee4-5918-0f9b-d413-650d32a7f2a8"
+shared_services_network_operations_eventbus_arn                   = "arn:aws:events:us-west-2:900095077793:event-bus/aws-fsf-network-operations-event-bus-563a8eba-b4d7-856a-a8a2-b048e6696a27"
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -46,8 +47,8 @@ spoke_vpc_network_operations_eventbus_arn                         = ""
 # ---------------------------------------------------------------------------------------------------------------
 ######### MUST BE CONFIGURED ##############
 transit_gateway_association_instructions= {
-    create_transit_gateway_association                        = false   # Specify true or false | Associates VPC with AWS Transit Gateway
-    access_shared_services_vpc                                = false   # Specify true or false | Propagates VPC routes to Shared Services Route Table
+    create_transit_gateway_association                        = true   # Specify true or false | Associates VPC with AWS Transit Gateway
+    access_shared_services_vpc                                = true   # Specify true or false | Propagates VPC routes to Shared Services Route Table
     perform_east_west_packet_inspection                       = false   # Specify true or false | Propagates VPC routes to Packet Inspection Route Table for North-South Packet Inspection
     allow_onprem_access_to_entire_vpc_cidr_range              = false   # Specify true or false | Propagate Routes to On-premises Route Table
     allow_onprem_access_to_externally_routable_vpc_cidr_range = false   # Specify true or false | Propagate Routes to On-premises Route Table
@@ -61,11 +62,11 @@ transit_gateway_association_instructions= {
 # ---------------------------------------------------------------------------------------------------------------
 ######### MUST BE CONFIGURED ##############
 security_grp_traffic_pattern = {
-    database                = false  # Specify true or false
-    web                     = false  # Specify true or false
-    kafka_zookeeper         = false  # Specify true or false
-    elasticsearch           = false  # Specify true or false
-    apache_spark            = false  # Specify true or false
+    database                = true  # Specify true or false
+    web                     = true  # Specify true or false
+    kafka_zookeeper         = false # Specify true or false
+    elasticsearch           = false # Specify true or false
+    apache_spark            = false # Specify true or false
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -79,18 +80,18 @@ security_grp_traffic_pattern = {
 endpoints = {
     s3_gateway          = true  # Specify true or false
     dynamodb            = true  # Specify true or false
-    secrets_manager     = false # Specify true or false
-    kms                 = false # Specify true or false
-    ec2                 = false # Specify true or false
-    ec2_messages        = false # Specify true or false
-    ecs                 = false # Specify true or false
-    ecs_agent           = false # Specify true or false
-    ecs_telemetry       = false # Specify true or false
-    sts                 = false # Specify true or false
-    sns                 = false # Specify true or false
-    sqs                 = false # Specify true or false
-    ssm                 = false # Specify true or false
-    ssm_messages        = false # Specify true or false
+    secrets_manager     = true # Specify true or false
+    kms                 = true # Specify true or false
+    ec2                 = true # Specify true or false
+    ec2_messages        = true # Specify true or false
+    ecs                 = true # Specify true or false
+    ecs_agent           = true # Specify true or false
+    ecs_telemetry       = true # Specify true or false
+    sts                 = true # Specify true or false
+    sns                 = true # Specify true or false
+    sqs                 = true # Specify true or false
+    ssm                 = true # Specify true or false
+    ssm_messages        = true # Specify true or false
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -100,12 +101,12 @@ endpoints = {
 ######### MUST BE CONFIGURED ##############
 route53_acts = {
     create_standalone_private_hosted_zone                                       = false  # Specify true or false
-    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false   # Specify true or false
-    associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
-    associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
-    create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
-    create_forwarding_rule_for_domain                                           = false # Specify true or false
-    share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
+    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = true   # Specify true or false
+    associate_with_dns_vpc_or_a_shared_services_vpc                             = true  # Specify true or false
+    associate_with_private_hosted_zone_with_centralized_dns_solution            = true  # Specify true or false
+    create_forwarding_rule_for_sub_domain                                       = true # Specify true or false
+    create_forwarding_rule_for_domain                                           = true # Specify true or false
+    share_forwarding_rule_with_aws_organization                                 = true # Specify true or false
 }
 
 route_53_resolver_firewall_actions                                              = { resolver_firewall_resource_share_exists = true }
@@ -114,7 +115,7 @@ route_53_resolver_firewall_rule_group_association_priority                      
 route_53_resolver_firewall_rule_group_association_name                          = "central_resolver_firewall_group"
 
 igw_decisions                                                                   = {
-    ipv4_internet_gateway = false
+    ipv4_internet_gateway = true
     ipv6_internet_gateway = false
 }
 
@@ -125,18 +126,18 @@ byoip_id = ""
 
 nat_decisions = {
     byoip                   = false
-    create_eip              = false
-    create_nat_gateway      = false
+    create_eip              = true
+    create_nat_gateway      = true
 }
 
 nat_gateway_connectivity_type= {
-    public  = false
-    private = false
+    public  = true
+    private = true
 }
 
 number_of_azs_to_deploy_to = 2
 
-create_private_nat_gateway = false
+create_private_nat_gateway = true
 
 create_public_nat_gateway  = false
 
@@ -179,7 +180,7 @@ rule_type = "FORWARD"
 # ---------------------------------------------------------------------------------------------------------------
 vpc_type={
     spoke_vpc               = false  # Specify true or false
-    shared_services         = false # Specify true or false
+    shared_services         = true # Specify true or false
 }
 
 
@@ -304,7 +305,7 @@ transit_gateway_subnets = [
 # ---------------------------------------------------------------------------------------------------------------
 route_table = {
     aws_routable_table          = true  # Specify true or false
-    tgw_table                   = true  # Specify true or false
+    tgw_table                   = true # Specify true or false
     external_table              = true  # Specify true or false
 }
 
