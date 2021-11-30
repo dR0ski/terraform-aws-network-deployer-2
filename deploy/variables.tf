@@ -1,27 +1,263 @@
-variable "aws_region"{ default = "" }//  eu-west-3
+# ---------------------------------------------------------------------------------------------------------------
+# SOLUTION BUILD CONTROL | BOOLEAN MAP THAT CONTROLS THE TYPE OF VPC TO DEPLOY
+# ---------------------------------------------------------------------------------------------------------------
+# Add true besides the solution you would like to deploy.
+#   1. Adding true for shared_services_vpc to deploy a shared services VPC
+#   2. Adding true for spoke_vpc deploys a spoke VPC
+#   3. Adding true for pave_networking_components_for_spoke_n_shared_services_integration to deploy
+#      the eventbus and lambda functions that makes it possible for spoke VPCs to associate with
+#      centralized resources inside the shared services VPC or security services VPC.
+# ---------------------------------------------------------------------------------------------------------------
 
-variable "transit_gateway_id" {default = ""}
+######### MUST BE CONFIGURED ##############
+variable "which_vpc_type_are_you_creating" {
+  type = map(bool)
+  default = {
+    shared_services_vpc     = false                                                   # Specify true or false
+    spoke_vpc               = false                                                   # Specify true or false
+    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or false
+  }
+}
 
-variable "transit_gateway_dev_route_table" {default = ""}
 
-variable "transit_gateway_uat_route_table" {default = ""}
+# ---------------------------------------------------------------------------------------------------------------
+#  AWS TRANSIT GATEWAY IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
+# ---------------------------------------------------------------------------------------------------------------
+variable "transit_gateway_id" {default=""}
+variable "transit_gateway_dev_route_table" {default=""}
+variable "transit_gateway_uat_route_table" {default=""}
+variable "transit_gateway_shared_svc_route_table" {default=""}
+variable "transit_gateway_packet_inspection_route_table" {default=""}
+variable "transit_gateway_prod_route_table" {default=""}
 
-variable "transit_gateway_shared_svc_route_table" {default = ""}
 
-variable "transit_gateway_packet_inspection_route_table" {default = ""}
-
-variable "transit_gateway_prod_route_table" {default = ""}
+# ---------------------------------------------------------------------------------------------------------------
+#  SHARED SERVICES IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
+# ---------------------------------------------------------------------------------------------------------------
+variable "shared_services_vpc_id" {default=""}
 
 variable "shared-services-vpc-network-operations-put-event-lambda-fn-name" {default = ""}
 
 variable "shared_services_network_operations_eventbus_arn" {default = ""}
 
-variable "vpc_env_type"{default="shared"}
 
 # ---------------------------------------------------------------------------------------------------------------
-##################################################### Centralized NAT ###########################################
+#  SPOKE IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
+# ---------------------------------------------------------------------------------------------------------------
+variable "spoke-vpc-network-operations-put-event-lambda-fn-name" {default=""}
+
+variable "spoke_vpc_network_operations_eventbus_arn" {default=""}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Transit Gateway Association Task Map
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "transit_gateway_association_instructions" {
+  type = map(bool)
+  default = {
+    create_transit_gateway_association                        = false   # Specify true or false | Associates VPC with AWS Transit Gateway
+    access_shared_services_vpc                                = false   # Specify true or false | Propagates VPC routes to Shared Services Route Table
+    perform_east_west_packet_inspection                       = false   # Specify true or false | Propagates VPC routes to Packet Inspection Route Table for North-South Packet Inspection
+    allow_onprem_access_to_entire_vpc_cidr_range              = false   # Specify true or false | Propagate Routes to On-premises Route Table
+    allow_onprem_access_to_externally_routable_vpc_cidr_range = false   # Specify true or false | Propagate Routes to On-premises Route Table
+
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# AWS ROUTE 53 RESOLVER DNS FIREWALL |  Adding true creates the security that you want
+# ---------------------------------------------------------------------------------------------------------------
+#   ####### Only enable the security that is needed
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "route_53_resolver_firewall_actions" {
+  type = map(bool)
+  default = {
+    resolver_firewall_resource_share_exists = true
+  }
+}
+
+variable "route_53_resolver_firewall_group" {
+  default = ""
+}
+
+variable "route_53_resolver_firewall_rule_group_association_priority"{
+  default = 100
+}
+
+variable "route_53_resolver_firewall_rule_group_association_name" {
+  default = ""
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# AWS VPC SECURITY GROUP | Decision Map | Adding true creates the security that you want
+# ---------------------------------------------------------------------------------------------------------------
+#   ####### Only enable the security that is needed
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "security_grp_traffic_pattern" {
+  type = map(bool)
+  default = {
+    database                = true  # Specify true or false
+    web                     = true  # Specify true or false
+    kafka_zookeeper         = false # Specify true or false
+    elasticsearch           = false # Specify true or false
+    apache_spark            = false # Specify true or false
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# VPC ENDPOINTS
+# ---------------------------------------------------------------------------------------------------------------
+# VPC Endpoint Boolean Map
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED IF YOU ARE DEPLOYING A STAND ALONE SPOKE VPC. ##############
+#########        DO NOT CONFIGURE IF DEPLOYING A SHARED SERVICES VPC     ##############
+# ---------------------------------------------------------------------------------------------------------------
+variable "endpoints" {
+  type = map(bool)
+  default = {
+    s3_gateway          = true  # Specify true or false
+    dynamodb            = true  # Specify true or false
+    secrets_manager     = false # Specify true or false
+    kms                 = false # Specify true or false
+    ec2                 = false # Specify true or false
+    ec2_messages        = false # Specify true or false
+    ecs                 = false # Specify true or false
+    ecs_agent           = false # Specify true or false
+    ecs_telemetry       = false # Specify true or false
+    sts                 = false # Specify true or false
+    sns                 = false # Specify true or false
+    sqs                 = false # Specify true or false
+    ssm                 = false # Specify true or false
+    ssm_messages        = false # Specify true or false
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Route 53 Private Hosted Zone |
+# Controls whether a private hosted zone is created or not. It also controls the creation of route 53 resolver rules.
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "route53_acts" {
+  type = map(bool)
+  default = {
+    create_standalone_private_hosted_zone                                       = false  # Specify true or false
+    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
+    associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
+    associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
+    create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
+    create_forwarding_rule_for_domain                                           = false # Specify true or false
+    share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# AWS REGION | REGION CODE MAPPED TO REGION NAME
+# ---------------------------------------------------------------------------------------------------------------
+variable "aws_region"{
+  type = map(string)
+  default = {
+    n_virginia        = "us-east-1"
+    ohio              = "us-east-2"
+    n_california      = "us-west-1"
+    oregon            = "us-west-2"
+    canada_montreal   = "ca-central-1"
+    ireland           = "eu-west-1"
+    london            = "eu-west-2"
+    paris             = "eu-west-3"
+    south_africa      = "af-south-1"
+    hong_kong         = "ap-east-1"
+    mumbai            = "ap-south-1"
+    osaka_local       = "ap-northeast-3"
+    seoul             = "ap-northeast-2"
+    singapore         = "ap-southeast-1"
+    sydney            = "ap-southeast-2"
+    tokyo             = "ap-northeast-1"
+    frankfurt         = "eu-central-1"
+    milan             = "eu-south-1"
+    paris             = "eu-west-3"
+    stockholm         = "eu-north-1"
+    middle_east       = "me-south-1"
+    sao_paulo         = "sa-east-1"
+  }
+}
+
+
+variable "rule_type" {
+  type    = string
+  description = "The AWS Route 53 resolver rule type can either be FORWARD|SYSTEM|RECURSIVE."
+  default = "FORWARD"
+  validation {
+    # The condition here identifies if the variable contains one of the AWS Regions specified. This list can be reduced.
+    condition = can(regex("FORWARD|SYSTEM|RECURSIVE", var.rule_type))
+    error_message = "Please enter a valid AWS Route 53 resolver rule type."
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+#  Controls Resource Deployment for VPC TYPES
 # ---------------------------------------------------------------------------------------------------------------
 
+# VPC TYPE
+# ---------------------------------------------------------------------------------------------------------------
+variable "vpc_type" {
+  type = map(bool)
+  default = {
+    spoke_vpc               = true  # Specify true or false
+    shared_services         = false # Specify true or false
+  }
+}
+
+
+variable "vpc_type_string" {
+  type = map(string)
+  default = {
+    spoke-vpc               = "spoke-vpc"
+    shared-services         = "shared-services-vpc"
+
+  }
+}
+
+variable "vpc_env_type"{
+  default="fsf"
+}
+
+
+
+# Decision to make associate with centralized Route53 Private Hosted Zone
+# ---------------------------------------------------------------------------------------------------------------
+variable "is_centralize_interface_endpoints_available" {
+  type = map(bool)
+  default = {
+    is_centralized_interface_endpoints          = false # Specify true or false
+    associate_with_private_hosted_zones         = false # Specify true or false
+  }
+}
+
+
+variable "attach_to_centralize_dns_solution"{
+  default = false # Specify true or false
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+#################################################### Internet Gateway ###########################################
+# ---------------------------------------------------------------------------------------------------------------
+variable "igw_decisions" {
+  type = map(bool)
+  default = {
+    ipv4_internet_gateway = false
+    ipv6_internet_gateway = false
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+##################################################### Centralized NAT Variables ######################################################
+# ---------------------------------------------------------------------------------------------------------------
 variable "byoip_id" {default = ""}
 
 variable "create_private_nat_gateway" {default = false}
@@ -34,7 +270,7 @@ variable "nat_decisions" {
     byoip                   = false
     create_internet_gateway = true
     create_eip              = true
-    create_nat_gateway      = false
+    create_nat_gateway      = true
   }
 }
 
@@ -54,98 +290,6 @@ variable "number_of_azs_to_deploy_to" {
     error_message = "A minimum of two AZs are required and as a result two subnet IDs and EIPs. Please correct to a number of two or greaters."
   }
 }
-
-
-# ---------------------------------------------------------------------------------------------------------------
-#################################################### Internet Gateway ###########################################
-# ---------------------------------------------------------------------------------------------------------------
-
-variable "igw_decisions" {
-  type = map(bool)
-  default = {
-    ipv4_internet_gateway = false
-    ipv6_internet_gateway = false
-  }
-}
-
-
-# ---------------------------------------------------------------------------------------------------------------
-##################################################### Route 53 Actions ##########################################
-# ---------------------------------------------------------------------------------------------------------------
-variable "route53_acts" {
-  type = map(bool)
-  default = {
-    create_private_hosted_zone                  = false
-    create_forwarding_rule_for_sub_domain       = false
-    create_forwarding_rule_for_domain           = true
-    share_forwarding_rule_with_aws_organization = true
-  }
-}
-
-variable "rule_type" {
-  type    = string
-  description = "The AWS Route 53 resolver rule type can either be FORWARD|SYSTEM|RECURSIVE."
-  default = "FORWARD"
-  validation {
-    # The condition here identifies if the variable contains one of the AWS Regions specified. This list can be reduced.
-    condition = can(regex("FORWARD|SYSTEM|RECURSIVE", var.rule_type))
-    error_message = "Please enter a valid AWS Route 53 resolver rule type."
-  }
-}
-
-
-
-# ---------------------------------------------------------------------------------------------------------------
-#  Controls Resource Deployment for VPC TYPES
-# ---------------------------------------------------------------------------------------------------------------
-
-# VPC TYPE
-# ---------------------------------------------------------------------------------------------------------------
-variable "vpc_type" {
-  type = map(bool)
-  default = {
-    spoke_vpc               = true
-    shared_services         = false
-  }
-}
-
-
-variable "vpc_type_string" {
-  type = map(string)
-  default = {
-    spoke-vpc               = "spoke-vpc"
-    shared-services         = "shared-services-vpc"
-
-  }
-}
-
-
-# Decision to make associate with centralized Route53 Private Hosted Zone
-# ---------------------------------------------------------------------------------------------------------------
-variable "is_centralize_interface_endpoints_available" {
-  type = map(bool)
-  default = {
-    is_centralized_interface_endpoints          = false
-    associate_with_private_hosted_zones         = false
-  }
-}
-
-
-
-variable "aws_region_names" {
-  type = map(string)
-  default = {
-    us-east-1     = "n_virginia"
-    us-east-2     = "ohio"
-    us-west-1     = "n_california"
-    us-west-2     = "oregon"
-    ca-central-1  = "canada_montreal"
-    eu-west-1     = "ireland"
-    eu-west-2     = "london"
-    eu-west-3     = "paris"
-  }
-}
-
 
 # ---------------------------------------------------------------------------------------------------------------
 ################################################## VPC VARIABLES ################################################
@@ -232,8 +376,8 @@ variable "enable_vpc_flow_logs" {
 variable "create_dhcp_options" {
   type = map(bool)
   default = {
-    dhcp_options          = true
-    custom_dhcp_options   = false
+    dhcp_options          = true  # Specify true or false
+    custom_dhcp_options   = false # Specify true or false
   }
 }
 
@@ -248,7 +392,7 @@ variable "custom_domain_name" {
 
 
 variable "domain_name_servers" {
-  default = ["127.0.0.1", "10.0.0.2"]
+  default = ["127.0.0.1"]
 }
 
 variable "ntp_servers" {
@@ -266,25 +410,10 @@ variable "netbios_node_type" {
 }
 
 
-# ---------------------------------------------------------------------------------------------------------------
-################################### TRANSIT GATEWAY ASSOCIATION VARIBLES ########################################
-# ---------------------------------------------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------------------------------------------
-# Transit Gateway Association Task Map
-# ---------------------------------------------------------------------------------------------------------------
-variable "transit_gateway_association_instructions" {
-  type = map(bool)
-  default = {
-    create_transit_gateway_association                        = true //Associates VPC with AWS Transit Gateway
-    access_shared_services_vpc                                = true //Propagates VPC routes to Shared Services Route Table
-    perform_east_west_packet_inspection                       = false
-    allow_onprem_access_to_entire_vpc_cidr_range              = false
-    allow_onprem_access_to_externally_routable_vpc_cidr_range = false
-
-  }
+variable "private_hosted_zone_name"{
+  type = list(string)
+  default =  ["anaconda.aws-fsf-corp.com"]
 }
-
 
 # ---------------------------------------------------------------------------------------------------------------
 ########################################### SUBNET MODULE VARIABLES #############################################
@@ -298,9 +427,9 @@ variable "transit_gateway_association_instructions" {
 variable "subnet_type" {
   type = map(bool)
   default = {
-    aws_routable                      = true
-    externally_routable               = true
-    transit_gateway_subnet            = true
+    aws_routable                      = true # Specify true or false
+    externally_routable               = true # Specify true or false
+    transit_gateway_subnet            = true # Specify true or false
   }
 }
 
@@ -310,11 +439,7 @@ variable "subnet_type" {
 # Map of port and security group attributes required for the creations of the Amazon VPC Security Group
 # ---------------------------------------------------------------------------------------------------------------
 variable "private_subnets" {
-  default = [
-    "100.64.1.0/24",
-    "100.64.2.0/24",
-    "100.64.3.0/24"
-  ]
+  default = ["127.0.0.1"]
 }
 
 
@@ -322,11 +447,7 @@ variable "private_subnets" {
 # Map of port and security group attributes required for the creations of the Amazon VPC Security Group
 # ---------------------------------------------------------------------------------------------------------------
 variable "public_subnets" {
-  default = [
-    "100.64.8.0/24",
-    "100.64.9.0/24",
-    "100.64.10.0/24"
-  ]
+  default = ["127.0.0.1"]
 }
 
 
@@ -334,11 +455,7 @@ variable "public_subnets" {
 # Transit Gateway Attachment Subnet
 # ---------------------------------------------------------------------------------------------------------------
 variable "transit_gateway_subnets" {
-  default = [
-    "100.64.0.0/28",
-    "100.64.0.16/28",
-    "100.64.0.32/28"
-  ]
+  default = ["127.0.0.1"]
 }
 
 
@@ -351,9 +468,9 @@ variable "transit_gateway_subnets" {
 variable "route_table" {
   type = map(bool)
   default = {
-    aws_routable_table          = true
-    tgw_table                   = true
-    external_table              = true
+    aws_routable_table          = true  # Specify true or false
+    tgw_table                   = false # Specify true or false
+    external_table              = true  # Specify true or false
   }
 }
 
@@ -373,9 +490,11 @@ variable "additional_route_deployment_configuration" {
   default = true
 }
 
+
 variable "add_igw_route_to_externally_routable_route_tables" {
   default=true
 }
+
 
 # TGW Destination CIDR Block
 # ---------------------------------------------------------------------------------------------------------------
@@ -384,6 +503,7 @@ variable "tgw_aws_route_destination"{
   default = ["0.0.0.0/0"]
 
 }
+
 
 variable "tgw_external_route_destination"{
   description = "Contains the Destination IP/s for the externally routable subnets"
@@ -400,44 +520,12 @@ variable "tgw_route_destination"{
 
 }
 
-variable "tgw_subnet_route_destination_for_public_nat_deployment"{
-  description = "Contains the DEFAULT Route as a Destination IP for the tgw route table"
-  default = ["0.0.0.0/0"]
-}
 
 variable "tgw_subnet_route_destination_for_private_nat_deployment"{
   description = "Contains the DEFAULT Route as a Destination IP for the tgw route table"
-  default = ["0.0.0.0/0"]
+  default = ["10.254.0.0/16"]
 }
 
-variable "igw_destination_cidr_block" {
-  default = "0.0.0.0/0"
-}
-# ---------------------------------------------------------------------------------------------------------------
-# VPC ENDPOINTS
-# ---------------------------------------------------------------------------------------------------------------
-
-# VPC Endpoint Object List
-# ---------------------------------------------------------------------------------------------------------------
-variable "endpoints" {
-  type = map(bool)
-  default = {
-    s3_gateway          = true
-    dynamodb            = true
-    secrets_manager     = true
-    kms                 = true
-    ec2                 = true
-    ec2_messages        = true
-    ecs                 = true
-    ecs_agent           = true
-    ecs_telemetry       = true
-    sts                 = true
-    sns                 = true
-    sqs                 = true
-    ssm                 = true
-    ssm_messages        = true
-  }
-}
 
 
 # Decision to create AWS Route 53 Private Hosted Zones
@@ -445,7 +533,7 @@ variable "endpoints" {
 variable "create_private_hosted_zones_for_endpoints" {
   description = "A boolean flag to enable/disable DNS support in the VPC. Defaults true."
   type    = bool
-  default = true
+  default = false
   validation {
     condition     = (var.create_private_hosted_zones_for_endpoints == true || var.create_private_hosted_zones_for_endpoints == false )
     error_message = "DNS Support flag must be either true or false."
@@ -479,18 +567,6 @@ variable "on_premises_cidrs" {
   default = [ "172.16.0.0/16", "172.17.0.0/16", "172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.22.0.0/16" ]
 }
 
-variable "security_grp_traffic_pattern" {
-  type = map(bool)
-  default = {
-    database                = true
-    web                     = true
-    kafka_zookeeper         = false
-    elasticsearch           = false
-    apache_spark            = false
-
-  }
-}
-
 # ---------------------------------------------------------------------------------------------------------------
 # Route 53 Resolver DNS Firewall
 # ---------------------------------------------------------------------------------------------------------------
@@ -504,7 +580,6 @@ variable "route_53_resolver_firewall_rule_block_override_ttl" {default = 1}
 variable "route_53_resolver_firewall_rule_block_response" {default = ""}
 variable "firewall_rule_group_association_priority" {default = 100}
 variable "firewall_rule_group_association_name" {default = ""}
-variable "resource_share_arn" {default = ""}
 
 variable "route_53_resolver_firewall_rule_priority" {
   type = map(number)
@@ -543,43 +618,41 @@ variable "ram_actions" {
 variable "resolver_dns_firewall_ram_share_name" {default="aws_fsf_resolver_dns_firewall_ram_share"}
 variable "allow_external_principals" {default=false}
 
-
-
 # ---------------------------------------------------------------------------------------------------------------
 ##################################################### TAGS ######################################################
 # ---------------------------------------------------------------------------------------------------------------
-
+####### MUST CONFIGURE #######
 # Variables that makes up the AWS Tags assigned to the VPC on creation.
 # ---------------------------------------------------------------------------------------------------------------
 
 variable "Application_ID" {
   description = "The Application ID of the application that will be hosted inside this Amazon VPC."
   type = string
-  default = "0000000"
+  default = "please_add_this_info"
 }
 
 variable "Application_Name" {
   description = "The name of the application. Max 10 characters. Allowed characters [0-9A-Za-z]."
   type = string
-  default = "fsf-shared-services-vpc"
+  default = "please_add_this_info"
 }
 
 variable "Business_Unit" {
   description = "The business unit or line of business to which this application belongs."
   type = string
-  default = "Commercial Banking (CB)"
+  default = "please_add_this_info"
 }
 
 variable "Environment_Type" {
   description = "The applications environment type. Possible values: LAB, SandBox, DEV, UAT, PROD."
   type = string
-  default = "Shared Services"
+  default = "DEV"
 }
 
 variable "CostCenterCode" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
-  default = "CB-0000000"
+  default = "CB_0000000"
 }
 
 variable "CreatedBy" {
@@ -591,10 +664,5 @@ variable "CreatedBy" {
 variable "Manager" {
   description = "CSI Billing Profile Number associated with application to be hosted in this vpc."
   type = string
-  default = "KenJackson"
-}
-
-
-variable "api_x_key" {
-  default = "eInSTeInXtHe0rY7rEltiv!ty"
+  default = "please_add_this_info"
 }

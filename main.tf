@@ -19,13 +19,12 @@ Please do the following before deploying this solution:
 resource "random_uuid" "uuid_a" { }
 
 locals{
-  shared-services-name = "fsf_shared_services"
-  spoke-name = "fsf_spoke_vpc"
-  shared-joint-name = join("_", [local.shared-services-name, random_uuid.uuid_a.result])
-  spoke-joint-name = join("_", [local.spoke-name, random_uuid.uuid_a.result])
-  pave-joint-name = join("_", ["fsf_network_paving", random_uuid.uuid_a.result])
+  shared-services-name     = "fsf_shared_services"
+  spoke-name               = "fsf_spoke_vpc"
+  shared-joint-name        = join("_", [local.shared-services-name, random_uuid.uuid_a.result])
+  spoke-joint-name         = join("_", [local.spoke-name, random_uuid.uuid_a.result])
+  pave-joint-name          = join("_", ["fsf_network_paving", random_uuid.uuid_a.result])
 }
-
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -35,9 +34,6 @@ locals{
 module "pave_account_with_network_orchestration_components" {
   source = "./aws-financial-services-framework-account-paving-for-networking-components"
   count = ((var.which_vpc_type_are_you_creating.pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration == true && var.which_vpc_type_are_you_creating.spoke_vpc ==false && var.which_vpc_type_are_you_creating.shared_services_vpc==false) ? 1:0)
-  providers = {
-    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
-  }
 
   # ----------------------------------------------------------------------------------------------------
   # VPC Type specifies the type of VPC being created. This is used in the EventBus and Lambda FNs
@@ -54,8 +50,6 @@ module "pave_account_with_network_orchestration_components" {
   CreatedBy                                 = var.CreatedBy
   Manager                                   = var.Manager
   Environment_Type                          = var.Environment_Type
-
-
 }
 
 
@@ -66,30 +60,27 @@ module "pave_account_with_network_orchestration_components" {
 module "shared_services_vpc" {
   source = "./aws-financial-services-framework-deploy-shared-services-vpc"
   count = ((var.which_vpc_type_are_you_creating.shared_services_vpc == true) ? 1:0)
-  providers = {
-    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
-  }
 
   # ----------------------------------------------------------------------------------------------------
   # CIDR Range to be used for creating your VPC
   # ----------------------------------------------------------------------------------------------------
-  vpc_cidr_block                        = "100.64.0.0/16"
+  vpc_cidr_block                        = var.vpc_cidr_block
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnets that will host your public resources like NAT Gateways, public facing load balancers.
   # At least 1 IP address must be present in this list for each subnet type being created.
   # ----------------------------------------------------------------------------------------------------
-  public_subnets                        = ["100.64.1.0/24", "100.64.2.0/24", "100.64.3.0/24"]
+  public_subnets                        = var.public_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnet(s) for hosting private workloads
   # ----------------------------------------------------------------------------------------------------
-  private_subnets                       = ["100.64.4.0/24", "100.64.5.0/24", "100.64.6.0/24"]
+  private_subnets                       = var.private_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates a subnet that will host your transit gateway attachment interfaces.
   # ----------------------------------------------------------------------------------------------------
-  transit_gateway_subnets               = ["100.64.7.0/24", "100.64.8.0/24", "100.64.9.0/24"]
+  transit_gateway_subnets               = var.transit_gateway_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Passes a list of IP addresses for on-premises resource to the security group module for uses in rules
@@ -104,28 +95,7 @@ module "shared_services_vpc" {
   # ----------------------------------------------------------------------------------------------------
   # AWS Region where VPC is to be created
   # ----------------------------------------------------------------------------------------------------
-  aws_region                            = var.aws_region.paris
-
-  # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to Access Transit Gateway State Info
-  # --------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where the TGW terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_backend_s3_bucket_aws_region                 = var.tf_backend_s3_bucket_aws_region
-  tf_backend_state_file_s3_prefixpath_n_key_name  = var.tf_backend_state_file_s3_prefixpath_n_key_name
-  tf_backend_s3_bucket_name                       = var.tf_backend_s3_bucket_name
-
-
-  # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to the Network Paving Components for this account
-  # ----------------------------------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where the Shared Services Paving Components terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_shared_services_network_paving_components_backend_s3_bucket_aws_region                = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
-  tf_shared_services_network_paving_components_backend_s3_bucket_name                      = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
-  tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-
-
+  aws_region                            = var.aws_region
 
   # ----------------------------------------------------------------------------------------------------
   # TGW Association
@@ -137,16 +107,70 @@ module "shared_services_vpc" {
   # ----------------------------------------------------------------------------------------------------
   transit_gateway_association_instructions  = var.transit_gateway_association_instructions
 
+  transit_gateway_id                                = var.transit_gateway_id
+  transit_gateway_dev_route_table                   = var.transit_gateway_dev_route_table
+  transit_gateway_uat_route_table                   = var.transit_gateway_uat_route_table
+  transit_gateway_shared_svc_route_table            = var.transit_gateway_shared_svc_route_table
+  transit_gateway_packet_inspection_route_table     = var.transit_gateway_shared_svc_route_table
+  transit_gateway_prod_route_table                  = var.transit_gateway_prod_route_table
+
+  # ----------------------------------------------------------------------------------------------------
+  # Network Paved Infrastructure
+  # ----------------------------------------------------------------------------------------------------
+  shared-services-vpc-network-operations-put-event-lambda-fn-name   = var.shared-services-vpc-network-operations-put-event-lambda-fn-name
+  shared_services_network_operations_eventbus_arn                   = var.shared_services_network_operations_eventbus_arn
+
+  # ----------------------------------------------------------------------------------------------------
+  # Route 53 Resolver DNS Firewall Implementation
+  # ----------------------------------------------------------------------------------------------------
+  firewall_fail_open                                                = var.firewall_fail_open
+  domain_list_name                                                  = var.domain_list_name
+  firewall_rule_group                                               = var.firewall_rule_group
+  route_53_resolver_firewall_rule_name                              = var.route_53_resolver_firewall_rule_name
+  route_53_resolver_firewall_rule_block_override_dns_type           = var.route_53_resolver_firewall_rule_block_override_dns_type
+  route_53_resolver_firewall_rule_block_override_domain             = var.route_53_resolver_firewall_rule_block_override_domain     # Required if block_response is OVERRIDE
+  route_53_resolver_firewall_rule_block_override_ttl                = var.route_53_resolver_firewall_rule_block_override_ttl           # Required if block_response is OVERRIDE
+  route_53_resolver_firewall_rule_block_response                    = var.route_53_resolver_firewall_rule_block_response    # Required if action is BLOCK
+  route_53_resolver_firewall_rule_priority                          = var.route_53_resolver_firewall_rule_priority          # Required
+  firewall_rule_group_association_priority                          = var.firewall_rule_group_association_priority          # Required - Provide a num <> "100" and "9900"
+  firewall_rule_group_association_name                              = var.firewall_rule_group_association_name
+  domain_list                                                       = var.domain_list
+  action_type                                                       = var.action_type
+  ram_actions                                                       = var.ram_actions
+
+  # ----------------------------------------------------------------------------------------------------
+  # Internet Gateway Asset
+  # ----------------------------------------------------------------------------------------------------
+  igw_decisions              = var.igw_decisions
+
+  # ----------------------------------------------------------------------------------------------------
+  # Centralized NAT Assets
+  # ----------------------------------------------------------------------------------------------------
+  byoip_id                      = var.byoip_id
+  number_of_azs_to_deploy_to    = var.number_of_azs_to_deploy_to
+  nat_decisions                 = var.nat_decisions
+  nat_gateway_connectivity_type = var.nat_gateway_connectivity_type
+  create_private_nat_gateway    = var.create_private_nat_gateway
+  create_public_nat_gateway     = var.create_public_nat_gateway
+
+  # ----------------------------------------------------------------------------------------------------
+  # Route Addition
+  # ----------------------------------------------------------------------------------------------------
+  default_deployment_route_configuration                  = var.default_deployment_route_configuration
+  additional_route_deployment_configuration               = var.additional_route_deployment_configuration
+  tgw_subnet_route_destination_for_private_nat_deployment = var.tgw_subnet_route_destination_for_private_nat_deployment
+
+
+  # ----------------------------------------------------------------------------------------------------
   # Tags
-  # -------
+  # ----------------------------------------------------------------------------------------------------
   Application_ID                            = var.Application_ID
   Application_Name                          = local.shared-joint-name
   Business_Unit                             = var.Business_Unit
   CostCenterCode                            = var.CostCenterCode
   CreatedBy                                 = var.CreatedBy
   Manager                                   = var.Manager
-  Environment_Type                          = "shared services"
-
+  Environment_Type                          = var.Environment_Type
 }
 
 /*
@@ -172,30 +196,27 @@ Assumptions:
 module "spoke_vpc" {
   source = "./aws-financial-services-framework-deploy-spoke-vpc"
   count = ((var.which_vpc_type_are_you_creating.spoke_vpc == true) ? 1:0)
-  providers = {
-    aws = aws.paris # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
-  }
 
   # ----------------------------------------------------------------------------------------------------
   # CIDR Range to be used for creating your VPC
   # ----------------------------------------------------------------------------------------------------
-  vpc_cidr_block                                  = "100.65.0.0/16"
+  vpc_cidr_block                                  = var.vpc_cidr_block
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnets that will host resources that can be accessed externally and that can initiate traffic to external entities.
   # At least 1 IP address must be present in this list for each subnet type being created.
   # ----------------------------------------------------------------------------------------------------
-  public_subnets                                  = ["100.65.1.0/24", "100.65.2.0/24", "100.65.3.0/24"]
+  public_subnets                                  = var.public_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates subnet(s) for hosting private workloads
   # ----------------------------------------------------------------------------------------------------
-  private_subnets                                 = ["100.65.4.0/24", "100.65.5.0/24", "100.65.6.0/24"]
+  private_subnets                                 = var.private_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Creates a subnet that will host your transit gateway attachment interfaces.
   # ----------------------------------------------------------------------------------------------------
-  transit_gateway_subnets                         = ["100.65.7.0/24", "100.65.8.0/24", "100.65.9.0/24"]
+  transit_gateway_subnets                         = var.transit_gateway_subnets
 
   # ----------------------------------------------------------------------------------------------------
   # Passes a list of IP addresses for on-premises resource to the security group module for uses in rules
@@ -210,42 +231,7 @@ module "spoke_vpc" {
   # ----------------------------------------------------------------------------------------------------
   # AWS Region where VPC is to be created
   # ----------------------------------------------------------------------------------------------------
-  aws_region                                      = var.aws_region.paris
-
-  # ----------------------------------------------------------------------------------------------------
-  # Passing the variables that configures the data source to the transit gateway backend
-  # ----------------------------------------------------------------------------------------------------
-  tf_backend_s3_bucket_aws_region                 = var.tf_backend_s3_bucket_aws_region
-  tf_backend_state_file_s3_prefixpath_n_key_name  = var.tf_backend_state_file_s3_prefixpath_n_key_name
-  tf_backend_s3_bucket_name                       = var.tf_backend_s3_bucket_name
-
-  # ----------------------------------------------------------------------------------------------------
-  # Shared Services VPC Association (Backend Data Source Configuration)
-  # -----------------------------------------------------------------------
-  # If you have deployed the shared services VPC then configure the below three variables. This configuration
-  # allows the data source to pull the shared services state information via the backend that you configured.
-  # ----------------------------------------------------------------------------------------------------
-  tf_shared_services_backend_s3_bucket_aws_region                = var.tf_shared_services_backend_s3_bucket_aws_region
-  tf_shared_services_backend_s3_bucket_name                      = var.tf_shared_services_backend_s3_bucket_name
-  tf_shared_services_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_backend_state_file_s3_prefixpath_n_key_name
-
-  # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to the Network Paving Components for Shared Services Account
-  # ----------------------------------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where the Shared Services Paving Components terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_shared_services_network_paving_components_backend_s3_bucket_aws_region                = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
-  tf_shared_services_network_paving_components_backend_s3_bucket_name                      = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
-  tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-
-  # ----------------------------------------------------------------------------------------------------
-  # Terraform Data Source Configuration to the Network Paving Components for This Account
-  # ----------------------------------------------------------------------------------------------------
-  # The three below variables configure passes the AWS S3 information where This Account Paving Components terraform state is hosted
-  # ----------------------------------------------------------------------------------------------------
-  tf_this_account_network_paving_components_backend_s3_bucket_aws_region                = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
-  tf_this_account_network_paving_components_backend_s3_bucket_name                      = var.tf_this_account_network_paving_components_backend_s3_bucket_name
-  tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+  aws_region                                      = var.aws_region
 
   # ----------------------------------------------------------------------------------------------------
   # TGW Association (Backend Data Source Configuration)
@@ -255,16 +241,41 @@ module "spoke_vpc" {
   # If an integration should take place then the instruction allows for attachment and
   # TGW route table configuration
   # ----------------------------------------------------------------------------------------------------
-  transit_gateway_association_instructions      = var.transit_gateway_association_instructions
+  transit_gateway_association_instructions          = var.transit_gateway_association_instructions
+
+  transit_gateway_id                                = var.transit_gateway_id
+  transit_gateway_dev_route_table                   = var.transit_gateway_dev_route_table
+  transit_gateway_uat_route_table                   = var.transit_gateway_uat_route_table
+  transit_gateway_shared_svc_route_table            = var.transit_gateway_shared_svc_route_table
+  transit_gateway_packet_inspection_route_table     = var.transit_gateway_shared_svc_route_table
+  transit_gateway_prod_route_table                  = var.transit_gateway_prod_route_table
+
+  # ----------------------------------------------------------------------------------------------------
+  # Network Paved Infrastructure
+  # ----------------------------------------------------------------------------------------------------
+  shared_services_vpc_id                                   = var.shared_services_vpc_id
+  shared_services_network_operations_eventbus_arn          = var.shared_services_network_operations_eventbus_arn
+  spoke-vpc-network-operations-put-event-lambda-fn-name    = var.spoke-vpc-network-operations-put-event-lambda-fn-name
+  spoke_vpc_network_operations_eventbus_arn                = var.spoke_vpc_network_operations_eventbus_arn
+
+  # ----------------------------------------------------------------------------------------------------
+  # Route 53 Resolver
+  # ----------------------------------------------------------------------------------------------------
+  route_53_resolver_firewall_actions                           = var.route_53_resolver_firewall_actions
+  route_53_resolver_firewall_group                             = var.route_53_resolver_firewall_group
+  route_53_resolver_firewall_rule_group_association_priority   = var.route_53_resolver_firewall_rule_group_association_priority
+  route_53_resolver_firewall_rule_group_association_name       = var.route_53_resolver_firewall_rule_group_association_name
+
+
 
   # ----------------------------------------------------------------------------------------------------
   # VPC Endpoints
-  # ---------------------
+  # ----------------------------------------------------------------------------------------------------
   # VPC Endpoints are an integral part of the VPC experience. The below endpoint specification
   # Passes a boolean map with the endpoints to be configure. By default on the Gateway Endpoints are
   # enabled for spoke VPCs
   # ----------------------------------------------------------------------------------------------------
-  endpoints                                     = var.endpoints
+  endpoints                                                   = var.endpoints
 
   # ----------------------------------------------------------------------------------------------------
   # Integrating with Centralized VPC Endpoints (If Available)
@@ -296,7 +307,7 @@ module "spoke_vpc" {
   # ----------------------------------------------------------------------------------------------------
   route53_acts                                  = var.route53_acts
   rule_type                                     = var.rule_type
-  private_hosted_zone_name                      = ["anaconda.aws-fsf-corp.com"]
+  private_hosted_zone_name                      = var.private_hosted_zone_name
 
   # Tags
   # -------

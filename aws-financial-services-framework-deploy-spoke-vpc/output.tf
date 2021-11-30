@@ -51,6 +51,6 @@ output "this_tgw_attachment_routing_table_id" {
 #---------------------------------------------------------------------
 # EventBridge EventBus Info |
 #---------------------------------------------------------------------
-output "this_eventbridge_networkops_eventbus_arn" {
-  value = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn # module.fsf-spoke-vpc-network-operations-eventbus.eventbus_arn
-}
+//output "this_eventbridge_networkops_eventbus_arn" {
+//  value = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn # module.fsf-spoke-vpc-network-operations-eventbus.eventbus_arn
+//}

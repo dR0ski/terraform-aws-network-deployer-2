@@ -10,59 +10,59 @@ to match your backend.
 If you dont have a back then please comment out this data source block.
 */
 
-data "terraform_remote_state" "transit_gateway_network" {
-  count = var.transit_gateway_association_instructions.create_transit_gateway_association==true  ? 1:0
-  backend = "s3"
-  config = {
-    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
-    bucket = var.tf_backend_s3_bucket_name
-    # Please populate with the key name the terraform.tfstate file for your transit_gateway
-    key = var.tf_backend_state_file_s3_prefixpath_n_key_name
-    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
-    region = var.tf_backend_s3_bucket_aws_region
-  }
-}
+# data "terraform_remote_state" "transit_gateway_network" {
+#   count = var.transit_gateway_association_instructions.create_transit_gateway_association==true  ? 1:0
+#   backend = "s3"
+#   config = {
+#     # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+#     bucket = var.tf_backend_s3_bucket_name
+#     # Please populate with the key name the terraform.tfstate file for your transit_gateway
+#     key = var.tf_backend_state_file_s3_prefixpath_n_key_name
+#     # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+#     region = var.tf_backend_s3_bucket_aws_region
+#   }
+# }
 
 
-data "terraform_remote_state" "shared_services_network" {
-  count = (var.is_centralize_interface_endpoints_available.is_centralized_interface_endpoints==true && var.is_centralize_interface_endpoints_available.associate_with_private_hosted_zones==true) ? 1:0
-  backend = "s3"
-  config = {
-    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
-    bucket = var.tf_shared_services_backend_s3_bucket_name
-    # Please populate with the key name the terraform.tfstate file for your transit_gateway
-    key = var.tf_shared_services_backend_state_file_s3_prefixpath_n_key_name
-    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
-    region = var.tf_shared_services_backend_s3_bucket_aws_region
-  }
-}
-
-
-data "terraform_remote_state" "shared_services_network_paving_components" {
-  count = (var.is_centralize_interface_endpoints_available.is_centralized_interface_endpoints==true && var.is_centralize_interface_endpoints_available.associate_with_private_hosted_zones==true) ? 1:0
-  backend = "s3"
-  config = {
-    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
-    bucket = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
-    # Please populate with the key name the terraform.tfstate file for your transit_gateway
-    key = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
-    region = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
-  }
-}
-
-
-data "terraform_remote_state" "this_account_network_paving_components" {
-  backend = "s3"
-  config = {
-    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
-    bucket = var.tf_this_account_network_paving_components_backend_s3_bucket_name
-    # Please populate with the key name the terraform.tfstate file for your transit_gateway
-    key = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
-    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
-    region = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
-  }
-}
+//data "terraform_remote_state" "shared_services_network" {
+//  count = (var.is_centralize_interface_endpoints_available.is_centralized_interface_endpoints==true && var.is_centralize_interface_endpoints_available.associate_with_private_hosted_zones==true) ? 1:0
+//  backend = "s3"
+//  config = {
+//    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+//    bucket = var.tf_shared_services_backend_s3_bucket_name
+//    # Please populate with the key name the terraform.tfstate file for your transit_gateway
+//    key = var.tf_shared_services_backend_state_file_s3_prefixpath_n_key_name
+//    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+//    region = var.tf_shared_services_backend_s3_bucket_aws_region
+//  }
+//}
+//
+//
+//data "terraform_remote_state" "shared_services_network_paving_components" {
+//  count = (var.is_centralize_interface_endpoints_available.is_centralized_interface_endpoints==true && var.is_centralize_interface_endpoints_available.associate_with_private_hosted_zones==true) ? 1:0
+//  backend = "s3"
+//  config = {
+//    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+//    bucket = var.tf_shared_services_network_paving_components_backend_s3_bucket_name
+//    # Please populate with the key name the terraform.tfstate file for your transit_gateway
+//    key = var.tf_shared_services_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+//    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+//    region = var.tf_shared_services_network_paving_components_backend_s3_bucket_aws_region
+//  }
+//}
+//
+//
+//data "terraform_remote_state" "this_account_network_paving_components" {
+//  backend = "s3"
+//  config = {
+//    # Please populate with the name of the S3 bucket that holds the terraform.tfstate file for your transit_gateway
+//    bucket = var.tf_this_account_network_paving_components_backend_s3_bucket_name
+//    # Please populate with the key name the terraform.tfstate file for your transit_gateway
+//    key = var.tf_this_account_network_paving_components_backend_state_file_s3_prefixpath_n_key_name
+//    # Please populate with the AWS Region for the S3 bucket that stores the terraform.tfstate file for your transit_gateway
+//    region = var.tf_this_account_network_paving_components_backend_s3_bucket_aws_region
+//  }
+//}
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -84,13 +84,13 @@ locals {
 
 locals {
   # count = var.transit_gateway_association_instructions.create_transit_gateway_association==true  ? 1:0
-  region_name                           = lookup(var.aws_region_names, var.aws_region, "what?")
-  tgw_id                                = join("_", [local.region_name, "transit_gateway_id"])
-  tgw_dev_route_table                   = join("_", [local.region_name,"tgw_development_route_table_id"])
-  tgw_uat_route_table                   = join("_", [local.region_name,"tgw_uat_route_table_id"])
-  tgw_shared_svc_route_table            = join("_", [local.region_name,"tgw_shared_services_route_table_id"])
-  tgw_packet_inspection_route_table     = join("_", [local.region_name,"tgw_packet_inspection_route_table_id"])
-  tgw_prod_route_table                  = join("_", [local.region_name,"tgw_production_route_table_id"])
+  # region_name                           = lookup(var.aws_region_names, var.aws_region, "what?")
+  tgw_id                                = var.transit_gateway_id                                            # join("_", [local.region_name, "transit_gateway_id"])
+  tgw_dev_route_table                   = var.transit_gateway_dev_route_table                               # join("_", [local.region_name,"tgw_development_route_table_id"])
+  tgw_uat_route_table                   = var.transit_gateway_uat_route_table                               # join("_", [local.region_name,"tgw_uat_route_table_id"])
+  tgw_shared_svc_route_table            = var.transit_gateway_shared_svc_route_table                        # join("_", [local.region_name,"tgw_shared_services_route_table_id"])
+  tgw_packet_inspection_route_table     = var.transit_gateway_packet_inspection_route_table                 # join("_", [local.region_name,"tgw_packet_inspection_route_table_id"])
+  tgw_prod_route_table                  = var.transit_gateway_prod_route_table                              # join("_", [local.region_name,"tgw_production_route_table_id"])
 }
 
 
@@ -178,20 +178,20 @@ module "fsf-spoke_vpc-transit-gateway-association" {
   source                                            = "../aws-financial-services-framework-transit-gateway-association-n-route-configuration"
   vpc_id                                            = module.spoke_vpc.vpc_id
   environment_type                                  = var.Environment_Type
-  transit_gateway_id                                = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")        #paris_transit_gateway_id
-  transit_gateway_dev_route_table_id                = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_dev_route_table, "transit gateway dev route table not found")
-  transit_gateway_uat_route_table_id                = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_uat_route_table, "transit gateway uat route table not found")
-  transit_gateway_shared_services_route_table_id    = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_shared_svc_route_table, "transit gateway shared services route table not found")
-  transit_gateway_packet_inspection_route_table_id  = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_packet_inspection_route_table, "transit gateway packet inspection route table not found")
-  transit_gateway_production_route_table_id         = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_prod_route_table, "transit gateway prod route table not found")
-  transit_gateway_subnets                           = module.fsf-spoke-vpc-subnets.transit_gateway_subnets # "${aws_subnet.transit_gateway_attachment_subnet.*.id}"
+  transit_gateway_id                                = local.tgw_id                               # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")        #paris_transit_gateway_id
+  transit_gateway_dev_route_table_id                = local.tgw_dev_route_table                  # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_dev_route_table, "transit gateway dev route table not found")
+  transit_gateway_uat_route_table_id                = local.tgw_uat_route_table                  # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_uat_route_table, "transit gateway uat route table not found")
+  transit_gateway_shared_services_route_table_id    = local.tgw_shared_svc_route_table           # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_shared_svc_route_table, "transit gateway shared services route table not found")
+  transit_gateway_packet_inspection_route_table_id  = local.tgw_packet_inspection_route_table    # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_packet_inspection_route_table, "transit gateway packet inspection route table not found")
+  transit_gateway_production_route_table_id         = local.tgw_prod_route_table                 # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_prod_route_table, "transit gateway prod route table not found")
+  transit_gateway_subnets                           = module.fsf-spoke-vpc-subnets.transit_gateway_subnets                              # "${aws_subnet.transit_gateway_attachment_subnet.*.id}"
   create_transit_gateway_association                = var.transit_gateway_association_instructions.create_transit_gateway_association
-  transit_gateway_subnets_exist                     = module.fsf-spoke-vpc-subnets.tgw_routable_enabled  # var.subnet_type.transit_gateway_subnet
+  transit_gateway_subnets_exist                     = module.fsf-spoke-vpc-subnets.tgw_routable_enabled                                 #   var.subnet_type.transit_gateway_subnet
   access_shared_services_vpc                        = var.transit_gateway_association_instructions.access_shared_services_vpc
   perform_east_west_packet_inspection               = var.transit_gateway_association_instructions.perform_east_west_packet_inspection
-  route53_association_lambda_fn_name                = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
+  route53_association_lambda_fn_name                = var.spoke-vpc-network-operations-put-event-lambda-fn-name # data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
   # EVENT BUS ARN FOR THE TGW ACCOUNT NETWORKING COMPONENTS.
-  eventbus_arn                                      = data.terraform_remote_state.shared_services_network_paving_components[0].outputs.vpc_network_operations_eventbus_arn #.shared_services_networkops_eventbus_arn
+  eventbus_arn                                      = var.shared_services_network_operations_eventbus_arn                                      # data.terraform_remote_state.shared_services_network_paving_components[0].outputs.vpc_network_operations_eventbus_arn #.shared_services_networkops_eventbus_arn
 }
 
 
@@ -199,16 +199,18 @@ module "fsf-spoke_vpc-transit-gateway-association" {
 # Add Route Module
 # ---------------------------------------------------------------------------------------------------------------
 module "fsf-spoke-vpc-add-route" {
-  source                          = "../aws-financial-services-framework-add-routes"
-  count = (var.transit_gateway_association_instructions.create_transit_gateway_association == true ? 1:0)
-  depends_on = [module.fsf-spoke-vpc-subnets, module.fsf-spoke-create-vpc-route-tables, module.fsf-spoke_vpc-transit-gateway-association, module.fsf-spoke-vpc-endpoints]
-  aws_route_table_id              = module.fsf-spoke-create-vpc-route-tables.aws_routable_routing_table_id
-  external_route_table_id         = module.fsf-spoke-create-vpc-route-tables.externally_routable_routing_table_id
-  tgw_aws_route_destination       = var.tgw_aws_route_destination
-  tgw_external_route_destination  = var.tgw_external_route_destination
-  tgw_nexthopinfra_id             = lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")     #ENTER TGW ID    : THIS COULD BE A MODULE REFERENCE OR MANUALLY ENTERED ID : IF CREATE TGW ROUTE IS TRUE
-  route_table                     = var.route_table
-  next_hop_infra                  = var.next_hop_infra
+  source                                            = "../aws-financial-services-framework-add-routes"
+  count                                             = (var.transit_gateway_association_instructions.create_transit_gateway_association == true ? 1:0)
+  depends_on                                        = [module.fsf-spoke-vpc-subnets, module.fsf-spoke-create-vpc-route-tables, module.fsf-spoke_vpc-transit-gateway-association, module.fsf-spoke-vpc-endpoints]
+  aws_route_table_id                                = module.fsf-spoke-create-vpc-route-tables.aws_routable_routing_table_id
+  external_route_table_id                           = module.fsf-spoke-create-vpc-route-tables.externally_routable_routing_table_id
+  tgw_aws_route_destination                         = var.tgw_aws_route_destination
+  tgw_external_route_destination                    = var.tgw_external_route_destination
+  tgw_nexthopinfra_id                               = local.tgw_id                # lookup(data.terraform_remote_state.transit_gateway_network[0].outputs, local.tgw_id, "transit gateway ID not found")     #ENTER TGW ID    : THIS COULD BE A MODULE REFERENCE OR MANUALLY ENTERED ID : IF CREATE TGW ROUTE IS TRUE
+  route_table                                       = var.route_table
+  next_hop_infra                                    = var.next_hop_infra
+  default_deployment_route_configuration            = true
+  add_igw_route_to_externally_routable_route_tables = false
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -249,10 +251,10 @@ module "fsf-spoke-dns-private-hosted-zones" {
   vpc_id                              = module.spoke_vpc.vpc_id
   private_hosted_zone_name            = var.private_hosted_zone_name
   vpc_region                          = var.aws_region
-  eventbus_arn                        = data.terraform_remote_state.shared_services_network_paving_components[0].outputs.vpc_network_operations_eventbus_arn
-  shared_services_vpc_id              = data.terraform_remote_state.shared_services_network[0].outputs.shared_services_vpc_id
+  eventbus_arn                        = var.shared_services_network_operations_eventbus_arn            # data.terraform_remote_state.shared_services_network_paving_components[0].outputs.vpc_network_operations_eventbus_arn
+  shared_services_vpc_id              = var.shared_services_vpc_id                              # data.terraform_remote_state.shared_services_network[0].outputs.shared_services_vpc_id
   route53_acts                        = var.route53_acts
-  route53_association_lambda_fn_name  = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name
+  route53_association_lambda_fn_name  = var.spoke-vpc-network-operations-put-event-lambda-fn-name # data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name
   rule_type                           = var.rule_type
   # Tags
   # -------
@@ -302,21 +304,20 @@ module "fsf-spoke-vpc-dns-resolver" {
   Environment_Type                          = var.Environment_Type
 }
 
-
 # ---------------------------------------------------------------------------------------------------------------
 # AWS Lambda | Invoking the FN that adds the creation of this PHZ as an event in the Shared Service EventBus
 # ---------------------------------------------------------------------------------------------------------------
 data "aws_lambda_invocation" "hi_centralized_asset_assoc_me_with_your_endpoints" {
   count = (var.is_centralize_interface_endpoints_available.is_centralized_interface_endpoints==true && var.is_centralize_interface_endpoints_available.associate_with_private_hosted_zones==true) ? 1:0
   depends_on = [module.spoke_vpc, module.fsf-spoke-vpc-subnets, module.fsf-spoke-vpc-security-groups]
-  function_name = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
+  function_name = var.spoke-vpc-network-operations-put-event-lambda-fn-name # data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
   input = <<JSON
   {
     "event_type": "centralized_interface_endpoints_association_request",
     "vpc_id": "${module.spoke_vpc.vpc_id}",
     "vpc_region": "${var.aws_region}",
-    "eventbus_arn": "${data.terraform_remote_state.shared_services_network_paving_components[0].outputs.vpc_network_operations_eventbus_arn}",
-    "spoke_eventbus_arn": "${data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn}"
+    "eventbus_arn": "${var.shared_services_network_operations_eventbus_arn}",
+    "spoke_eventbus_arn": "${var.spoke_vpc_network_operations_eventbus_arn}"
   }
 JSON
 
@@ -329,14 +330,25 @@ JSON
 data "aws_lambda_invocation" "hi_centralized_asset_assoc_me_with_your_dns_resource_shares" {
   count = (var.attach_to_centralize_dns_solution==true) ? 1:0
   depends_on = [module.spoke_vpc, module.fsf-spoke-vpc-subnets, module.fsf-spoke-vpc-security-groups, data.aws_lambda_invocation.hi_centralized_asset_assoc_me_with_your_endpoints]
-  function_name = data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
+  function_name = var.spoke-vpc-network-operations-put-event-lambda-fn-name # data.terraform_remote_state.this_account_network_paving_components.outputs.vpc-network-operations-put-event-lambda-fn-name # module.fsf-spoke-phz-put-event.network-ops-put-event-lambda-fn-name
   input = <<JSON
   {
     "event_type": "centralized_dns_association_request",
     "vpc_id": "${module.spoke_vpc.vpc_id}",
     "vpc_region": "${var.aws_region}",
-    "eventbus_arn": "${data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn}"
+    "eventbus_arn": "${var.spoke_vpc_network_operations_eventbus_arn}"
   }
 JSON
 
+}
+# data.terraform_remote_state.this_account_network_paving_components.outputs.vpc_network_operations_eventbus_arn
+# ---------------------------------------------------------------------------------------------------------------
+# AWS | Route 53 Resolver DNS Firewall  | -->
+# ---------------------------------------------------------------------------------------------------------------
+resource "aws_route53_resolver_firewall_rule_group_association" "rule_group_association" {
+  count =  var.route_53_resolver_firewall_actions.resolver_firewall_resource_share_exists==true ? 1:0
+  name                   = var.route_53_resolver_firewall_rule_group_association_name
+  firewall_rule_group_id = var.route_53_resolver_firewall_group
+  priority               = var.route_53_resolver_firewall_rule_group_association_priority
+  vpc_id                 = module.spoke_vpc.vpc_id
 }
