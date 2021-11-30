@@ -27,7 +27,6 @@ variable "additional_route_deployment_configuration" {
 }
 
 
-
 variable "create_private_nat_gateway" {default = false}
 
 variable "create_public_nat_gateway" {default  = false}
@@ -46,7 +45,6 @@ variable "external_route_table_id"{
     description = "Holds the ID of the route table for externally routable subbnets"
     type = string
     default = "external_oute_table_id"
-
 }
 
 
