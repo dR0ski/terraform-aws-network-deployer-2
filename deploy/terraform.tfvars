@@ -9,13 +9,14 @@
 #      centralized resources inside the shared services VPC or security services VPC.
 # ---------------------------------------------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------------------------------------------
 ######### MUST BE CONFIGURED ##############
+# ---------------------------------------------------------------------------------------------------------------
 which_vpc_type_are_you_creating={
-    shared_services_vpc     = false     # Specify true or false
-    spoke_vpc               = false      # Specify true or false
-    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = true    # Specify true or fals
+    shared_services_vpc     = false    # Specify true or false
+    spoke_vpc               = false     # Specify true or false
+    pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration  = false    # Specify true or fals
 }
-
 
 # ---------------------------------------------------------------------------------------------------------------
 #  AWS TRANSIT GATEWAY IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
@@ -27,13 +28,11 @@ transit_gateway_shared_svc_route_table        = ""
 transit_gateway_packet_inspection_route_table = ""
 transit_gateway_prod_route_table              = ""
 
-
 # ---------------------------------------------------------------------------------------------------------------
 #  SHARED SERVICES IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
 # ---------------------------------------------------------------------------------------------------------------
 shared_services_vpc_id                                            = ""
 shared-services-vpc-network-operations-put-event-lambda-fn-name   = ""
-shared_services_network_operations_eventbus_arn                   = ""
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -62,11 +61,11 @@ transit_gateway_association_instructions= {
 # ---------------------------------------------------------------------------------------------------------------
 ######### MUST BE CONFIGURED ##############
 security_grp_traffic_pattern = {
-    database                = true  # Specify true or false
-    web                     = true  # Specify true or false
-    kafka_zookeeper         = false # Specify true or false
-    elasticsearch           = false # Specify true or false
-    apache_spark            = false # Specify true or false
+    database                = false  # Specify true or false
+    web                     = false  # Specify true or false
+    kafka_zookeeper         = false  # Specify true or false
+    elasticsearch           = false  # Specify true or false
+    apache_spark            = false  # Specify true or false
 }
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -80,9 +79,9 @@ security_grp_traffic_pattern = {
 endpoints = {
     s3_gateway          = true  # Specify true or false
     dynamodb            = true  # Specify true or false
-    secrets_manager     = true # Specify true or false
-    kms                 = true # Specify true or false
-    ec2                 = true # Specify true or false
+    secrets_manager     = false # Specify true or false
+    kms                 = false # Specify true or false
+    ec2                 = false # Specify true or false
     ec2_messages        = false # Specify true or false
     ecs                 = false # Specify true or false
     ecs_agent           = false # Specify true or false
@@ -100,8 +99,8 @@ endpoints = {
 # ---------------------------------------------------------------------------------------------------------------
 ######### MUST BE CONFIGURED ##############
 route53_acts = {
-    create_standalone_private_hosted_zone                                       = true  # Specify true or false
-    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
+    create_standalone_private_hosted_zone                                       = false  # Specify true or false
+    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false   # Specify true or false
     associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
     associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
     create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
@@ -109,6 +108,37 @@ route53_acts = {
     share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
 }
 
+route_53_resolver_firewall_actions                                              = { resolver_firewall_resource_share_exists = true }
+route_53_resolver_firewall_group                                                = ""
+route_53_resolver_firewall_rule_group_association_priority                      = 110 # please add a number between 100 &
+route_53_resolver_firewall_rule_group_association_name                          = "central_resolver_firewall_group"
+
+igw_decisions                                                                   = {
+    ipv4_internet_gateway = false
+    ipv6_internet_gateway = false
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+##################################################### Centralized NAT Variables ######################################################
+# ---------------------------------------------------------------------------------------------------------------
+byoip_id = ""
+
+nat_decisions = {
+    byoip                   = false
+    create_eip              = false
+    create_nat_gateway      = false
+}
+
+nat_gateway_connectivity_type= {
+    public  = false
+    private = false
+}
+
+number_of_azs_to_deploy_to = 2
+
+create_private_nat_gateway = false
+
+create_public_nat_gateway  = false
 
 # ---------------------------------------------------------------------------------------------------------------
 # AWS REGION | REGION CODE MAPPED TO REGION NAME
@@ -148,7 +178,7 @@ rule_type = "FORWARD"
 # VPC TYPE
 # ---------------------------------------------------------------------------------------------------------------
 vpc_type={
-    spoke_vpc               = true  # Specify true or false
+    spoke_vpc               = false  # Specify true or false
     shared_services         = false # Specify true or false
 }
 
@@ -169,7 +199,7 @@ is_centralize_interface_endpoints_available = {
 }
 
 
-attach_to_centralize_dns_solution = false # Specify true or false
+attach_to_centralize_dns_solution = true # Specify true or false
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -274,7 +304,7 @@ transit_gateway_subnets = [
 # ---------------------------------------------------------------------------------------------------------------
 route_table = {
     aws_routable_table          = true  # Specify true or false
-    tgw_table                   = false # Specify true or false
+    tgw_table                   = true  # Specify true or false
     external_table              = true  # Specify true or false
 }
 
@@ -283,11 +313,14 @@ next_hop_infra = {
     tgw   = true
 }
 
+additional_route_deployment_configuration               = true
+tgw_subnet_route_destination_for_private_nat_deployment = ["10.254.0.0/16"]
+add_igw_route_to_externally_routable_route_tables       = true
 
 # TGW Destination CIDR Block
 # ---------------------------------------------------------------------------------------------------------------
 tgw_aws_route_destination       = ["0.0.0.0/0"]
-tgw_external_route_destination  = ["0.0.0.0/0"]
+tgw_external_route_destination  = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "100.64.0.0/12"] # ["0.0.0.0/0"]
 
 
 
@@ -309,7 +342,35 @@ enable_private_dns = false
 
 # On-premises IP Range to be added to the spoke VPC security group
 # ---------------------------------------------------------------------------------------------------------------
-on_premises_cidrs = [ "172.16.0.0/16", "172.17.0.0/16", "172.18.0.0/16", "172.19.0.0/16", "172.20.0.0/16", "172.22.0.0/16" ]
+on_premises_cidrs = [ "172.16.0.0/12" ]
+
+
+firewall_fail_open                                                = "DISABLED"
+domain_list_name                                                  = "aws-fsf-resolver-fire-wall-domain-list"
+firewall_rule_group                                               = "aws-fsf-resolver-fire-wall-rule-group"
+route_53_resolver_firewall_rule_name                              = "aws-fsf-resolver-fire-wall-rule"
+route_53_resolver_firewall_rule_block_override_dns_type           = "CNAME"       # Required if block_response is OVERRIDE
+route_53_resolver_firewall_rule_block_override_domain             = "xyz.com"     # Required if block_response is OVERRIDE
+route_53_resolver_firewall_rule_block_override_ttl                = 600           # Required if block_response is OVERRIDE
+route_53_resolver_firewall_rule_block_response                    = "OVERRIDE"    # Required if action is BLOCK
+firewall_rule_group_association_priority                          = 101           # Required - Provide a num <> "100" and "9900"
+firewall_rule_group_association_name                              = "aws-fsf-resolver-fire-wall-rule-group-association"
+# --------------------------------------------------------------------------------------------------------------------
+# Resolver DNS Firewall | Orchestration Object
+# --------------------------------------------------------------------------------------------------------------------
+domain_list                                                       = { allow = ["abc.com"]
+    deny  = ["facebook.com"]
+    alert = ["xyz.com"] }
+
+action_type                                                       = { allow   = true
+    deny    = true
+    alert   = true }
+
+ram_actions                                                       = { create_resource_share = true }
+
+route_53_resolver_firewall_rule_priority                          = { allow = 0
+    deny  = 1
+    alert = 2 }
 
 # ---------------------------------------------------------------------------------------------------------------
 ##################################################### TAGS ######################################################
@@ -323,7 +384,7 @@ Application_Name  = "please_add_this_info"
 
 Business_Unit     = "please_add_this_info"
 
-Environment_Type  = "DEV"
+Environment_Type  = "Shared Services"
 
 CostCenterCode    = "CB_0000000"
 

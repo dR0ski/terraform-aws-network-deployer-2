@@ -12,6 +12,8 @@ module "deploy_aws_vpc_network"{
     aws = aws.oregon # Please look in the provider.tf file for all the pre-configured providers. Choose the one that matches your requirements.
   }
 
+  aws_region = var.aws_region.oregon
+
   # ---------------------------------------------------------------------------------------------------------------
   #  ORCHESTRATION | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
   # ---------------------------------------------------------------------------------------------------------------
@@ -64,8 +66,6 @@ module "deploy_aws_vpc_network"{
   # ---------------------------------------------------------------------------------------------------------------
   # AWS REGION | REGION CODE MAPPED TO REGION NAME
   # ---------------------------------------------------------------------------------------------------------------
-  aws_region                                                        = var.aws_region
-
   rule_type                                                         = var.rule_type
 
   # ---------------------------------------------------------------------------------------------------------------
@@ -145,8 +145,6 @@ module "deploy_aws_vpc_network"{
   # ---------------------------------------------------------------------------------------------------------------
   subnet_type = var.subnet_type
 
-
-
   # ---------------------------------------------------------------------------------------------------------------
   # Map of port and security group attributes required for the creations of the Amazon VPC Security Group
   # ---------------------------------------------------------------------------------------------------------------
@@ -198,6 +196,52 @@ module "deploy_aws_vpc_network"{
   # On-premises IP Range to be added to the spoke VPC security group
   # ---------------------------------------------------------------------------------------------------------------
   on_premises_cidrs = var.on_premises_cidrs
+
+  # ----------------------------------------------------------------------------------------------------
+  # Route 53 Resolver DNS Firewall Implementation
+  # ----------------------------------------------------------------------------------------------------
+  firewall_fail_open                                                = var.firewall_fail_open
+  domain_list_name                                                  = var.domain_list_name
+  firewall_rule_group                                               = var.firewall_rule_group
+  route_53_resolver_firewall_rule_name                              = var.route_53_resolver_firewall_rule_name
+  route_53_resolver_firewall_rule_block_override_dns_type           = var.route_53_resolver_firewall_rule_block_override_dns_type
+  route_53_resolver_firewall_rule_block_override_domain             = var.route_53_resolver_firewall_rule_block_override_domain     # Required if block_response is OVERRIDE
+  route_53_resolver_firewall_rule_block_override_ttl                = var.route_53_resolver_firewall_rule_block_override_ttl           # Required if block_response is OVERRIDE
+  route_53_resolver_firewall_rule_block_response                    = var.route_53_resolver_firewall_rule_block_response    # Required if action is BLOCK
+  route_53_resolver_firewall_rule_priority                          = var.route_53_resolver_firewall_rule_priority          # Required
+  firewall_rule_group_association_priority                          = var.firewall_rule_group_association_priority          # Required - Provide a num <> "100" and "9900"
+  firewall_rule_group_association_name                              = var.firewall_rule_group_association_name
+  domain_list                                                       = var.domain_list
+  action_type                                                       = var.action_type
+  ram_actions                                                       = var.ram_actions
+
+  route_53_resolver_firewall_actions                                = var.route_53_resolver_firewall_actions
+  route_53_resolver_firewall_group                                  = var.route_53_resolver_firewall_group
+  route_53_resolver_firewall_rule_group_association_priority        = var.route_53_resolver_firewall_rule_group_association_priority
+  route_53_resolver_firewall_rule_group_association_name            = var.route_53_resolver_firewall_rule_group_association_name
+
+  # ----------------------------------------------------------------------------------------------------
+  # Internet Gateway Asset
+  # ----------------------------------------------------------------------------------------------------
+  igw_decisions                                     = var.igw_decisions
+  add_igw_route_to_externally_routable_route_tables = var.add_igw_route_to_externally_routable_route_tables
+
+  # ----------------------------------------------------------------------------------------------------
+  # Centralized NAT Assets
+  # ----------------------------------------------------------------------------------------------------
+  byoip_id                      = var.byoip_id
+  number_of_azs_to_deploy_to    = var.number_of_azs_to_deploy_to
+  nat_decisions                 = var.nat_decisions
+  nat_gateway_connectivity_type = var.nat_gateway_connectivity_type
+  create_private_nat_gateway    = var.create_private_nat_gateway
+  create_public_nat_gateway     = var.create_public_nat_gateway
+
+  # ----------------------------------------------------------------------------------------------------
+  # Route Addition
+  # ----------------------------------------------------------------------------------------------------
+  additional_route_deployment_configuration               = var.additional_route_deployment_configuration
+  tgw_subnet_route_destination_for_private_nat_deployment = var.tgw_subnet_route_destination_for_private_nat_deployment
+
 
   # ---------------------------------------------------------------------------------------------------------------
   ##################################################### TAGS ######################################################
