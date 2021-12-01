@@ -26,6 +26,9 @@ variable "additional_route_deployment_configuration" {
   default = false
 }
 
+variable "add_igw_route_to_externally_routable_route_tables" {
+  default=false
+}
 
 variable "create_private_nat_gateway" {default = false}
 
