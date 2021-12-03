@@ -1,15 +1,36 @@
 # ---------------------------------------------------------------------------------------------------------------
+# DEPLOYMENT INSTRUCTIONS
+# ---------------------------------------------------------------------------------------------------------------
+# Before deploying any VPC(s), you are required to pave the account with three infrastructure that will be used to
+# orchestrate networking activities within the AWS Region where the VPC(s) is/are needed.
+# To pave the account, go to the "pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration" option
+# in the variable "which_vpc_type_are_you_creating" and add true.
+
+# Paving the account creates three resources. These are as follows
+# ---------------------------------------------------------------------
+# 1. AWS EventBridge EventBus: The name of this eventbus begins with "aws-fsf-network-operations-event-bus-"
+# 2. AWS Lambda Function that orchestrates and performs networking tasks
+# 3. AWS Lambda Function that writes events to the eventbus: The name of this function includes the words "fsf-network-event-writer"
+
+# Make a note of the ARNs. You will need them for STEP 3.
+
+
+######### STEP 1. ##############
+# ---------------------------------------------------------------------------------------------------------------
 # SOLUTION BUILD CONTROL | BOOLEAN MAP THAT CONTROLS THE TYPE OF VPC TO DEPLOY
 # ---------------------------------------------------------------------------------------------------------------
-# Add true besides the solution you would like to deploy.
+# The variable "which_vpc_type_are_you_creating" controls if the deployment builds a spoke VPC, shared services VPC
+# or paves the account with an eventbus and two lambda functions that performs networking tasks such as:
+# A. Transit Gateway route table association and configuration
+# B. Automatic association and integration with centralized resources.
+# ---------------------------------------------------------------------------------------------------------------
+#  # Add true besides the solution you would like to deploy.
 #   1. Adding true for shared_services_vpc to deploy a shared services VPC
 #   2. Adding true for spoke_vpc deploys a spoke VPC
 #   3. Adding true for pave_networking_components_for_spoke_n_shared_services_integration to deploy
 #      the eventbus and lambda functions that makes it possible for spoke VPCs to associate with
 #      centralized resources inside the shared services VPC or security services VPC.
 # ---------------------------------------------------------------------------------------------------------------
-
-######### MUST BE CONFIGURED ##############
 variable "which_vpc_type_are_you_creating" {
   type = map(bool)
   default = {
@@ -19,9 +40,14 @@ variable "which_vpc_type_are_you_creating" {
   }
 }
 
-
+######### STEP 2. ##############
 # ---------------------------------------------------------------------------------------------------------------
 #  AWS TRANSIT GATEWAY IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
+# ---------------------------------------------------------------------------------------------------------------
+# If this deployment deploys a VPC that should be attached to a transit gateway, then please perform the below tasks
+# ---------------------------------------------------------------------------------------------------------------
+# 1. Please add the AWS Transit Gateway ID for the transit gateway to which this VPC should be attached
+# 2. Please add the AWS Transit Gateway Route Table IDs for the above transit gateway
 # ---------------------------------------------------------------------------------------------------------------
 variable "transit_gateway_id" {default=""}
 variable "transit_gateway_dev_route_table" {default=""}
@@ -31,8 +57,18 @@ variable "transit_gateway_packet_inspection_route_table" {default=""}
 variable "transit_gateway_prod_route_table" {default=""}
 
 
+######### STEP 3. ##############
 # ---------------------------------------------------------------------------------------------------------------
 #  SHARED SERVICES IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
+# ---------------------------------------------------------------------------------------------------------------
+# If you are deploying a spoke VPC that should be integrated with the Shared Services VPC, then do the following:
+# 1. Enter the Shared Services VPC ID
+# 2. Enter the AWS ARN of the lambda function that puts events to the eventbus
+# 3. Enter the AWS EventBus ARN that was created by the deployment of "pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration"
+#
+# If you are deploying a Shared Services VPC, then only enter the "put event" lambda function and the AWS EventBus ARN
+# that was created by the deployment of "pave_account_with_eventbus_n_lambda_fn_for_network_task_orchestration"
+#
 # ---------------------------------------------------------------------------------------------------------------
 variable "shared_services_vpc_id" {default=""}
 
@@ -44,13 +80,24 @@ variable "shared_services_network_operations_eventbus_arn" {default = ""}
 # ---------------------------------------------------------------------------------------------------------------
 #  SPOKE IDENTIFIERS | TRANSIT GATEWAY & TRANSIT GATEWAY ROUTE TABLES
 # ---------------------------------------------------------------------------------------------------------------
+#
+# If you are not deploying a spoke VPC then leave the next two variables blank.
+#
+# If you are deploying a spoke VPC then please fill in the next two variables.
+#
+# ---------------------------------------------------------------------------------------------------------------
 variable "spoke-vpc-network-operations-put-event-lambda-fn-name" {default=""}
 
 variable "spoke_vpc_network_operations_eventbus_arn" {default=""}
 
 
 # ---------------------------------------------------------------------------------------------------------------
-# Transit Gateway Association Task Map
+# NETWORK INTEGRATION ACTIONS |
+# ---------------------------------------------------------------------------------------------------------------
+#
+#
+#
+#
 # ---------------------------------------------------------------------------------------------------------------
 ######### MUST BE CONFIGURED ##############
 variable "transit_gateway_association_instructions" {
@@ -61,10 +108,37 @@ variable "transit_gateway_association_instructions" {
     perform_east_west_packet_inspection                       = false   # Specify true or false | Propagates VPC routes to Packet Inspection Route Table for North-South Packet Inspection
     allow_onprem_access_to_entire_vpc_cidr_range              = false   # Specify true or false | Propagate Routes to On-premises Route Table
     allow_onprem_access_to_externally_routable_vpc_cidr_range = false   # Specify true or false | Propagate Routes to On-premises Route Table
-
   }
 }
 
+# ---------------------------------------------------------------------------------------------------------------
+# Route 53 Private Hosted Zone |
+# ---------------------------------------------------------------------------------------------------------------
+# Controls whether a private hosted zone is created or not. It also controls the creation of route 53 resolver rules.
+# ---------------------------------------------------------------------------------------------------------------
+######### MUST BE CONFIGURED ##############
+variable "route53_acts" {
+  type = map(bool)
+  default = {
+    create_standalone_private_hosted_zone                                       = false  # Specify true or false
+    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
+    associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
+    associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
+    create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
+    create_forwarding_rule_for_domain                                           = false # Specify true or false
+    share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
+  }
+}
+
+
+# ---------------------------------------------------------------------------------------------------------------
+#  AWS ROUTE 53 RESOLVER DNS FIREWALL |
+# ---------------------------------------------------------------------------------------------------------------
+#
+#
+#
+#
+# ---------------------------------------------------------------------------------------------------------------
 variable "route_53_resolver_firewall_actions" {
   type = map(bool)
   default = {
@@ -107,8 +181,7 @@ variable "security_grp_traffic_pattern" {
 # ---------------------------------------------------------------------------------------------------------------
 # VPC Endpoint Boolean Map
 # ---------------------------------------------------------------------------------------------------------------
-######### MUST BE CONFIGURED IF YOU ARE DEPLOYING A STAND ALONE SPOKE VPC. ##############
-#########        DO NOT CONFIGURE IF DEPLOYING A SHARED SERVICES VPC     ##############
+#
 # ---------------------------------------------------------------------------------------------------------------
 variable "endpoints" {
   type = map(bool)
@@ -127,24 +200,6 @@ variable "endpoints" {
     sqs                 = false # Specify true or false
     ssm                 = false # Specify true or false
     ssm_messages        = false # Specify true or false
-  }
-}
-
-# ---------------------------------------------------------------------------------------------------------------
-# Route 53 Private Hosted Zone |
-# Controls whether a private hosted zone is created or not. It also controls the creation of route 53 resolver rules.
-# ---------------------------------------------------------------------------------------------------------------
-######### MUST BE CONFIGURED ##############
-variable "route53_acts" {
-  type = map(bool)
-  default = {
-    create_standalone_private_hosted_zone                                       = false  # Specify true or false
-    create_private_hosted_zone_that_integrates_with_shared_services_or_dns_vpc  = false  # Specify true or false
-    associate_with_dns_vpc_or_a_shared_services_vpc                             = false  # Specify true or false
-    associate_with_private_hosted_zone_with_centralized_dns_solution            = false  # Specify true or false
-    create_forwarding_rule_for_sub_domain                                       = false # Specify true or false
-    create_forwarding_rule_for_domain                                           = false # Specify true or false
-    share_forwarding_rule_with_aws_organization                                 = false # Specify true or false
   }
 }
 
@@ -188,7 +243,6 @@ variable "vpc_type_string" {
   default = {
     spoke-vpc               = "spoke-vpc"
     shared-services         = "shared-services-vpc"
-
   }
 }
 
@@ -342,11 +396,11 @@ variable "private_hosted_zone_name"{
 ########################################### SUBNET MODULE VARIABLES #############################################
 # ---------------------------------------------------------------------------------------------------------------
 
-
-
+# ---------------------------------------------------------------------------------------------------------------
 # Private Subnet Declaration
 # ---------------------------------------------------------------------------------------------------------------
-
+# DO NOT Make any changes to the below variable. Each option must be set to true and they are.
+# ---------------------------------------------------------------------------------------------------------------
 variable "subnet_type" {
   type = map(bool)
   default = {
@@ -406,15 +460,15 @@ variable "next_hop_infra" {
 }
 
 variable "default_deployment_route_configuration" {
-  default = true
+  default = false
 }
 
 variable "additional_route_deployment_configuration" {
-  default = true
+  default = false
 }
 
 variable "add_igw_route_to_externally_routable_route_tables" {
-  default=true
+  default = false
 }
 
 
